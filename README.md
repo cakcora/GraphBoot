@@ -2,7 +2,7 @@
 
 Implements boostrapped sampling on networks. 
 
-**Networks**
+<h1>Used Networks</h1>
 <h2>Synthetic Graphs</h2>
 <p>Lognormal graphs</p>
 <p>Grid graphs</p>
