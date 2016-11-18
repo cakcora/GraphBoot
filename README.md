@@ -1,6 +1,6 @@
 # GraphBoot
 
-Implements boostrap sampling on networks. 
+A Spark/Scala implementation of boostrap sampling on networks. 
 
 <h1>Used Networks</h1>
 <h2>Synthetic Graphs</h2>
