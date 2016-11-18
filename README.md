@@ -3,12 +3,12 @@
 Implements boostrapped sampling on networks. 
 
 **Networks**
-- Synthetic Graphs
-----Lognormal graphs
-----Grid graphs
-----Rmat graphs
--Real World Graphs
-----Citation Graphs (DBLP 2016)
-----Directed Graphs (Twitter 2010)
-----Undirected Graphs (Facebook New Orleans)
-----Signed Graphs (Epinions.com)
+<h2>- Synthetic Graphs</h2>
+<p>----Lognormal graphs</p>
+<p>----Grid graphs</p>
+<p>----Rmat graphs</p>
+<h2>-Real World Graphs</h2>
+<p>----Citation Graphs (DBLP 2016)</p>
+<p>----Directed Graphs (Twitter 2010)</p>
+<p>----Undirected Graphs (Facebook New Orleans)</p>
+<p>----Signed Graphs (Epinions.com)</p>
