@@ -13,7 +13,7 @@ import scala.util.Random
 /**
   * Created by cxa123230 on 11/3/2016.
   */
-object GraphBoot {
+object GraphBootApproach1 {
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
