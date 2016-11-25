@@ -14,6 +14,8 @@ import scala.util.Random
   */
 object GraphBootApproach2 {
 
+
+
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
       .builder
@@ -36,6 +38,7 @@ object GraphBootApproach2 {
       var initialGraph: Graph[Int, Int] = graph.mapVertices((id, _) => 1500)
       initialGraph = initialGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
       val subGraph: Graph[Int, Int] = subgraphWithWave(initialGraph, wave)
+      val subList:List[Int] = multipleInclusion(subGraph)
       val proxySampleSize: Int = 1 + (subGraph.numVertices / 2).toInt
       println("Picking nodes " + proxySampleSize + " times:")
 
@@ -89,7 +92,7 @@ object GraphBootApproach2 {
 
     graphType match {
       case "grid" => {
-        val g: Graph[(Int, Int), Double] = GraphGenerators.gridGraph(sc, 10, 10)
+        val g: Graph[(Int, Int), Double] = GraphGenerators.gridGraph(sc, 3, 3)
         val gra: Graph[Int, Int] = g.mapVertices((a, b) => 1).mapEdges(a => 1)
         GraphCleaning.removeMultipleEdges(sc, gra)
       }
@@ -126,6 +129,12 @@ object GraphBootApproach2 {
       vertexDistance <= wave
     }))
     subGraph
+  }
+
+  def multipleInclusion(subGraph: Graph[Int,Int]) :List[Int]={
+    println(subGraph.edges.collect().mkString(" "))
+
+    new ListBuffer[Int]().toList
   }
 
   def chooseSeeds(sc: SparkContext, graph: Graph[Int, Int], seedCount: Int): RDD[(graphx.VertexId, Int)] = {
