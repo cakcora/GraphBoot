@@ -28,9 +28,10 @@ object GraphBootApproach2 {
     val bootCount: Int = 10
     val patchCount:Int = 3
 
-    val graph: Graph[Int, Int] = synthGraphGenerator(sc, "grid")
+    val graph: Graph[Int, Int] = synthGraphGenerator(sc, "lognormal")
+    println("Graph created.")
     var seedCount: Int = (graph.numVertices / 2).toInt
-    if (seedCount > 5000) seedCount = 5000;
+    if (seedCount > 200) seedCount = 200;
     var patchDegrees: ListBuffer[Double] = new ListBuffer[Double]()
     val C: Double = 2
     for(j<-1 to patchCount){
@@ -39,9 +40,13 @@ object GraphBootApproach2 {
       initialGraph = initialGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
       val subGraph: Graph[Int, Int] = subgraphWithWave(initialGraph, wave)
       val subList: ListBuffer[Int] = new ListBuffer[Int]()
-
+      var aList: Set[Edge[Int]] = subGraph.edges.collect().toSet
+      var mList: mutable.Set[Tuple2[Int, Int]] = new mutable.HashSet[Tuple2[Int, Int]]()
+      for (a <- aList) {
+        mList.add((a.srcId.toInt, a.dstId.toInt))
+      }
       for(seed<-seeds.map(e=>e._1.toInt).collect().toList){
-         subList++= LMSI.singleSeed(subGraph,seed)
+         subList++= LMSI.singleSeed(mList.clone(),seed)
       }
 
       val proxySampleSize: Int = 1 + (subGraph.numVertices / 2).toInt
@@ -102,12 +107,12 @@ object GraphBootApproach2 {
 
     graphType match {
       case "grid" => {
-        val g: Graph[(Int, Int), Double] = GraphGenerators.gridGraph(sc, 3000, 3000)
+        val g: Graph[(Int, Int), Double] = GraphGenerators.gridGraph(sc, 50, 50)
         val gra: Graph[Int, Int] = g.mapVertices((a, b) => 1).mapEdges(a => 1)
         GraphCleaning.removeMultipleEdges(sc, gra)
       }
       case "lognormal" => {
-        val gr: Graph[Long, Int] = GraphGenerators.logNormalGraph(sc, 10000, 1, 300, 10).removeSelfEdges()
+        val gr: Graph[Long, Int] = GraphGenerators.logNormalGraph(sc, 1000, 1).removeSelfEdges()
         GraphCleaning.removeMultipleEdges(sc, gr.mapVertices((a, b) => a.toInt))
       }
       case "rmat" =>{

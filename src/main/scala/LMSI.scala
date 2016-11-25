@@ -12,12 +12,8 @@ object LMSI {
 
   }
 
-  def singleSeed(graph: Graph[Int, Int], seed:Int):List[Int]={
-    var aList: Set[Edge[Int]] = graph.edges.collect().toSet
-    var mList: mutable.Set[Tuple2[Int, Int]] = new mutable.HashSet[Tuple2[Int, Int]]()
-    for (a <- aList) {
-      mList.add((a.srcId.toInt, a.dstId.toInt))
-    }
+  def singleSeed(mList: mutable.Set[Tuple2[Int, Int]], seed:Int):List[Int]={
+
     val disc: mutable.HashSet[Int] = new mutable.HashSet[Int]()
     var wave = 0;
     val seen: ListBuffer[Int] = new ListBuffer[Int]()
