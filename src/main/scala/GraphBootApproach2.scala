@@ -26,7 +26,7 @@ object GraphBootApproach2 {
     Logger.getRootLogger().setLevel(Level.ERROR)
     val wave: Int = 2
     val bootCount: Int = 10
-    val patchCount:Int = 10
+    val patchCount:Int = 3
 
     val graph: Graph[Int, Int] = synthGraphGenerator(sc, "grid")
     var seedCount: Int = (graph.numVertices / 2).toInt
@@ -38,18 +38,23 @@ object GraphBootApproach2 {
       var initialGraph: Graph[Int, Int] = graph.mapVertices((id, _) => 1500)
       initialGraph = initialGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
       val subGraph: Graph[Int, Int] = subgraphWithWave(initialGraph, wave)
-      val subList:List[Int] = multipleInclusion(subGraph)
-      val proxySampleSize: Int = 1 + (subGraph.numVertices / 2).toInt
-      println("Picking nodes " + proxySampleSize + " times:")
+      val subList: ListBuffer[Int] = new ListBuffer[Int]()
 
+      for(seed<-seeds.map(e=>e._1.toInt).collect().toList){
+         subList++= LMSI.singleSeed(subGraph,seed)
+      }
+
+      val proxySampleSize: Int = 1 + (subGraph.numVertices / 2).toInt
       var bstrapDegrees: ListBuffer[Double] = new ListBuffer[Double]()
-      println("**************BOOTSTRAPPING**********")
-      val vertexList: List[Int] = subGraph.vertices.collect().map(x => x._1.toInt).toList
+      println("\nPatch: : "+j)
+      val vertexList: List[Int] = subList.toList
       val listLength: Int = vertexList.length
       val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
 
       val seedSet: Set[Int] = seeds.map(e => e._1.toInt).collect().toSet
+      print("\tBoot: " )
       for (i <- 1 to bootCount) {
+        print(" "+i)
         val kSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
         val kNonSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
         val random: Random = new Random()
@@ -64,26 +69,31 @@ object GraphBootApproach2 {
         }
         val numSeeds = kSeedMap.map(e => e._2.toInt).sum
         val numNonSeeds = kNonSeedMap.map(e => e._2.toInt).sum
+        var p0 = kSeedMap(0)
+        if(numSeeds==0){
+          // no seed was sampled :(
+          p0=0;
+        }
+        else p0= kSeedMap(0) / numSeeds
         var avgDegree = 0.0
-        val p0 = kSeedMap(0) / numSeeds
         for (i <- (kSeedMap ++ kNonSeedMap)) {
           val i1: Double = kSeedMap(i._1) +  Math.abs(1 - p0) * kNonSeedMap(i._1)
           avgDegree += i._1 * i1 / ((numSeeds +numNonSeeds))
         }
         //add avg degree from this bootstrap
         bstrapDegrees += avgDegree
-        println(i + "th boothstrap: avgDegree " + avgDegree)
+//        println(i + "th boothstrap: avgDegree " + avgDegree)
       }
       patchDegrees +=breeze.stats.mean(bstrapDegrees);
     }
-    var denom1: Double = math.pow(patchCount, 0.5)
-    val valbase: Double = (C / denom1) * Math.pow(Math.pow(patchDegrees.map(e=>e*e).sum,0.5)/patchCount,0.5)
-    val i1 = breeze.stats.mean(patchDegrees) - valbase
-    val i2 = breeze.stats.mean(patchDegrees) + valbase
+    val denom: Double = math.pow(patchCount, 0.5)
+    val valBase: Double = (C / denom) * Math.pow(Math.pow(patchDegrees.map(e=>e*e).sum,0.5)/patchCount,0.5)
+    val i1 = breeze.stats.mean(patchDegrees) - valBase
+    val i2 = breeze.stats.mean(patchDegrees) + valBase
 
     val avgGraphDeg: Double = breeze.stats.mean(graph.degrees.map(_._2.toDouble).collect())
-    println("Bootstrap started with " + seedCount + " seeds, in a graph of " + graph.numVertices + " vertices, " + graph.numEdges + " edges.")
-    println("Within the interval[" + i1 + " , " + i2 + "]:" + (avgGraphDeg > i1 && avgGraphDeg < i2) + ", with a mean and variance of " + avgGraphDeg + ", " + breeze.stats.variance)
+    println("\nGraphBoot with " + seedCount + " seeds, in a graph of " + graph.numVertices + " vertices, " + graph.numEdges + " edges.")
+    println("Within the interval[" + i1 + " , " + i2 + "]:" + (avgGraphDeg > i1 && avgGraphDeg < i2) + ", with a mean and variance of " + avgGraphDeg + ", " + breeze.stats.variance(patchDegrees))
     sc.stop()
   }
 
@@ -92,7 +102,7 @@ object GraphBootApproach2 {
 
     graphType match {
       case "grid" => {
-        val g: Graph[(Int, Int), Double] = GraphGenerators.gridGraph(sc, 3, 3)
+        val g: Graph[(Int, Int), Double] = GraphGenerators.gridGraph(sc, 3000, 3000)
         val gra: Graph[Int, Int] = g.mapVertices((a, b) => 1).mapEdges(a => 1)
         GraphCleaning.removeMultipleEdges(sc, gra)
       }
@@ -131,11 +141,6 @@ object GraphBootApproach2 {
     subGraph
   }
 
-  def multipleInclusion(subGraph: Graph[Int,Int]) :List[Int]={
-    println(subGraph.edges.collect().mkString(" "))
-
-    new ListBuffer[Int]().toList
-  }
 
   def chooseSeeds(sc: SparkContext, graph: Graph[Int, Int], seedCount: Int): RDD[(graphx.VertexId, Int)] = {
     val vList: List[Int] = graph.vertices.collect().map(x => x._1.toInt).toList
@@ -143,7 +148,7 @@ object GraphBootApproach2 {
     val random = new Random()
     var seedList: ListBuffer[(Long, Int)] = ListBuffer()
     for (i <- 1 to seedCount) {
-      seedList += Tuple2(vList(random.nextInt(size)), 1)
+      seedList += Tuple2(vList(random.nextInt(size)), 0)
     }
     sc.parallelize(seedList)
   }
