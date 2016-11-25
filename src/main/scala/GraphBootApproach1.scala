@@ -25,11 +25,11 @@ object GraphBootApproach1 {
     Logger.getRootLogger().setLevel(Level.ERROR)
     val wave: Int = 2
     val bootCount: Int = 10
-    val patchCount:Int = 10
+    val patchCount:Int = 3
 
-    val graph: Graph[Int, Int] = synthGraphGenerator(sc, "grid")
+    val graph: Graph[Int, Int] = GraphCleaning.cleanGraph(sc,SyntheticData.synthGraphGenerator(sc,"lognormal"))
     var seedCount: Int = (graph.numVertices / 2).toInt
-    if (seedCount > 5000) seedCount = 5000;
+    if (seedCount > 200) seedCount = 200;
     var patchDegrees: ListBuffer[Double] = new ListBuffer[Double]()
     val C: Double = 2
     for(j<-1 to patchCount){
@@ -79,37 +79,13 @@ object GraphBootApproach1 {
     val i1 = breeze.stats.mean(patchDegrees) - valbase
     val i2 = breeze.stats.mean(patchDegrees) + valbase
 
-    val avgGraphDeg: Double = breeze.stats.mean(graph.degrees.map(_._2.toDouble).collect())
+    val collect: List[Double] = graph.degrees.map(_._2.toDouble).collect().toList
+    val avgGraphDeg: Double = breeze.stats.mean(collect)
     println("Bootstrap started with " + seedCount + " seeds, in a graph of " + graph.numVertices + " vertices, " + graph.numEdges + " edges.")
-    println("Within the interval[" + i1 + " , " + i2 + "]:" + (avgGraphDeg > i1 && avgGraphDeg < i2) + ", with a mean and variance of " + avgGraphDeg + ", " + breeze.stats.variance)
+    println("Within the interval[" + i1 + " , " + i2 + "]:" + (avgGraphDeg > i1 && avgGraphDeg < i2) + ", with a mean and variance of " + avgGraphDeg + ", " + breeze.stats.variance(patchDegrees))
     sc.stop()
   }
 
-
-  def synthGraphGenerator(sc: SparkContext, graphType: String): Graph[Int, Int] = {
-
-    graphType match {
-      case "grid" => {
-        val g: Graph[(Int, Int), Double] = GraphGenerators.gridGraph(sc, 10, 10)
-        val gra: Graph[Int, Int] = g.mapVertices((a, b) => 1).mapEdges(a => 1)
-        GraphCleaning.removeMultipleEdges(sc, gra)
-      }
-      case "lognormal" => {
-        val gr: Graph[Long, Int] = GraphGenerators.logNormalGraph(sc, 10000, 1, 300, 10).removeSelfEdges()
-        GraphCleaning.removeMultipleEdges(sc, gr.mapVertices((a, b) => a.toInt))
-      }
-      case "rmat" =>{
-        GraphGenerators.rmatGraph(sc,1000, 15000)
-      }
-      case "dblp" => {
-        GraphLoader.edgeListFile(sc, "src/main/resources/dblpgraph.txt")
-      }
-      case _: String => {
-        println("No preference for graph type: Using a random star graph.")
-        GraphGenerators.starGraph(sc, 100)
-      }
-    }
-  }
 
   def subgraphWithWave(initialGraph: Graph[Int, Int], wave: Int): Graph[Int, Int] = {
     val dist = initialGraph.pregel(Int.MaxValue)(

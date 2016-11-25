@@ -26,9 +26,9 @@ object GraphBootApproach2 {
     Logger.getRootLogger().setLevel(Level.ERROR)
     val wave: Int = 2
     val bootCount: Int = 10
-    val patchCount:Int = 3
+    val patchCount:Int = 10
 
-    val graph: Graph[Int, Int] = synthGraphGenerator(sc, "lognormal")
+    val graph: Graph[Int, Int] = GraphCleaning.cleanGraph(sc,SyntheticData.synthGraphGenerator(sc,"lognormal"))
     println("Graph created.")
     var seedCount: Int = (graph.numVertices / 2).toInt
     if (seedCount > 200) seedCount = 200;
@@ -102,31 +102,6 @@ object GraphBootApproach2 {
     sc.stop()
   }
 
-
-  def synthGraphGenerator(sc: SparkContext, graphType: String): Graph[Int, Int] = {
-
-    graphType match {
-      case "grid" => {
-        val g: Graph[(Int, Int), Double] = GraphGenerators.gridGraph(sc, 50, 50)
-        val gra: Graph[Int, Int] = g.mapVertices((a, b) => 1).mapEdges(a => 1)
-        GraphCleaning.removeMultipleEdges(sc, gra)
-      }
-      case "lognormal" => {
-        val gr: Graph[Long, Int] = GraphGenerators.logNormalGraph(sc, 1000, 1).removeSelfEdges()
-        GraphCleaning.removeMultipleEdges(sc, gr.mapVertices((a, b) => a.toInt))
-      }
-      case "rmat" =>{
-        GraphGenerators.rmatGraph(sc,1000, 15000)
-      }
-      case "dblp" => {
-        GraphLoader.edgeListFile(sc, "src/main/resources/dblpgraph.txt")
-      }
-      case _: String => {
-        println("No preference for graph type: Using a random star graph.")
-        GraphGenerators.starGraph(sc, 100)
-      }
-    }
-  }
 
   def subgraphWithWave(initialGraph: Graph[Int, Int], wave: Int): Graph[Int, Int] = {
     val dist = initialGraph.pregel(Int.MaxValue)(
