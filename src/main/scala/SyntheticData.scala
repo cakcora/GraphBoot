@@ -18,7 +18,7 @@ object SyntheticData {
       uniqueEdges = Some(PartitionStrategy.RandomVertexCut))
     tupleGraph
   }
-  def synthGraphGenerator(sc: SparkContext, graphType: String): Graph[Int, Int] = {
+  def synthGraphGenerator(sc: SparkContext, graphType: String, options:Map[String, AnyVal]): Graph[Int, Int] = {
 
     graphType match {
       case "grid" => {
@@ -27,8 +27,12 @@ object SyntheticData {
         GraphCleaning.cleanGraph(sc, gra)
       }
       case "lognormal" => {
-        val gr: Graph[Long, Int] = GraphGenerators.logNormalGraph(sc, 1000, 1,3, 0.5).removeSelfEdges()
-        GraphCleaning.cleanGraph(sc, gr.mapVertices((a, b) => a.toInt))
+        val mu = options("mu").asInstanceOf[Double]
+        val sigma = options("sigma").asInstanceOf[Double]
+        val vertices = options("vertices").asInstanceOf[Int]
+        val gr: Graph[Long, Int] = GraphGenerators.logNormalGraph(sc, vertices, 1, mu, sigma).removeSelfEdges()
+      GraphCleaning.cleanGraph(sc, gr.mapVertices((a, b) => a.toInt))
+
       }
       case "rmat" =>{
         GraphGenerators.rmatGraph(sc,1000, 15000)

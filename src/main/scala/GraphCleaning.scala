@@ -26,7 +26,6 @@ object GraphCleaning {
       un.append(order(a))
     }
     val gr2: Graph[Int, Int]  = Graph.fromEdgeTuples(sc.parallelize(un.distinct),defaultValue = 1)
-
     return gr2
   }
   def removeMultipleEdges2(sc:SparkContext, graph:Graph[Long,Int]): Graph[Long, Int] ={

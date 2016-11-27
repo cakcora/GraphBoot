@@ -27,13 +27,14 @@ object GraphBootApproach2 {
     val wave: Int = 2
     val bootCount: Int = 10
     val patchCount:Int = 10
-
-    val graph: Graph[Int, Int] = GraphCleaning.cleanGraph(sc,SyntheticData.synthGraphGenerator(sc,"lognormal"))
+    val options = Map(("mu", 1.0), ("sigma",0.005), ("vertices",100))
+    val graph: Graph[Int, Int] = GraphCleaning.cleanGraph(sc,SyntheticData.synthGraphGenerator(sc,"lognormal",options))
     println("Graph created.")
     var seedCount: Int = (graph.numVertices / 2).toInt
     if (seedCount > 200) seedCount = 200;
     var patchDegrees: ListBuffer[Double] = new ListBuffer[Double]()
     val C: Double = 2
+    val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
     for(j<-1 to patchCount){
       val seeds: RDD[(VertexId, Int)] = chooseSeeds(sc, graph, seedCount)
       var initialGraph: Graph[Int, Int] = graph.mapVertices((id, _) => 1500)
@@ -46,7 +47,7 @@ object GraphBootApproach2 {
         mList.add((a.srcId.toInt, a.dstId.toInt))
       }
       for(seed<-seeds.map(e=>e._1.toInt).collect().toList){
-         subList++= LMSI.singleSeed(mList.clone(),seed)
+        subList++= LMSI.singleSeed(mList.clone(),seed)
       }
 
       val proxySampleSize: Int = 1 + (subGraph.numVertices / 2).toInt
@@ -54,7 +55,6 @@ object GraphBootApproach2 {
       println("\nPatch: : "+j)
       val vertexList: List[Int] = subList.toList
       val listLength: Int = vertexList.length
-      val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
 
       val seedSet: Set[Int] = seeds.map(e => e._1.toInt).collect().toSet
       print("\tBoot: " )

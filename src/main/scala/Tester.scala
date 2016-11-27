@@ -20,11 +20,13 @@ object Tester {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
+    val options = Map(("mu", 3.0), ("sigma",0.00005), ("vertices",100))
+
     for(e<-1 to 6){
-    val g = GraphCleaning.cleanGraph(sc,SyntheticData.synthGraphGenerator(sc,"lognormal"))
+      val g: Graph[PartitionID, PartitionID] = SyntheticData.synthGraphGenerator(sc, "lognormal", options)
       val avgGraphDeg: Double = breeze.stats.mean(g.degrees.map(_._2.toDouble).collect())
-    println(g.numVertices+" "+g.numEdges+ " "+avgGraphDeg)
-  }
+      println(g.numVertices+" "+g.numEdges+ " "+avgGraphDeg)
+    }
 
   }
 
