@@ -25,7 +25,8 @@ object BootStrapper {
       val numSeeds = kSeedMap.map(e => e._2.toInt).sum
       val numNonSeeds = kNonSeedMap.map(e => e._2.toInt).sum
       var avgDegree = 0.0
-      val p0 = kSeedMap(0) / numSeeds
+      var p0 = 0;
+      if(numSeeds!=0)p0= kSeedMap(0) / numSeeds
       for (i <- (kSeedMap ++ kNonSeedMap)) {
         val i1: Double = kSeedMap(i._1) + Math.abs(1 - p0) * kNonSeedMap(i._1)
         avgDegree += i._1 * i1 / ((numSeeds + numNonSeeds))

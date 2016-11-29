@@ -26,14 +26,12 @@ object LMSI {
       val seenSet: mutable.HashSet[Int] = new mutable.HashSet[Int]()
       var rList: mutable.Set[Tuple2[Int, Int]] = new mutable.HashSet[Tuple2[Int, Int]]()
       for ((a, b) <- mList) {
-        //        print ((a,b)+" ")
         var f = false
         if (disc.contains(a)) {
           f = true
           if (disc.contains(b)) {
             seen.append(b)
             seen.append(a)
-            //            println("double "+a+ " "+b)
           }
           else {
             phase.add(b)
@@ -46,7 +44,6 @@ object LMSI {
           seenSet.add(a)
         }
         if (f) {
-          //          print("removing, ")
           rList.add((a, b))
         }
       }
