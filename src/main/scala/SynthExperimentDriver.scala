@@ -16,21 +16,20 @@ object SynthExperimentDriver {
       .getOrCreate()
     val sc = spark.sparkContext
     Logger.getRootLogger().setLevel(Level.ERROR)
-    val fw = new FileWriter("approach1.txt");
+    val fw = new FileWriter("approach2.txt");
     val header = "wave\tmu\tsigma\tvertices\tseedCount\tbootCount\tpatchCount\tpx\tnumVertices\tnumEdges\tmean\tavgGraphDeg\tvarianceOfpatchDegrees\tC\n"
     fw.write(header);
 
     var wave, waveX = 3
     var bootCount, bootCountX = 10
     var patchCount, patchCountX = 10
-    var mu, muX = 2.0
+    var mu, muX = 1.0
     var sigma, sigmaX = 1.3
-    var vertices, verticesX = 5
-    var sx, sxX: Int = 50
+    var vertices, verticesX = 1000
+    var sx, sxX: Int = 1
     var px, pxX = 40
     val options = Map(("mu", mu), ("sigma", sigma), ("vertices", vertices))
     val graph: Graph[PartitionID, PartitionID] = GraphCleaning.cleanGraph(sc, SyntheticData.synthGraphGenerator(sc, "lognormal", options))
-    println(graph.edges.collect().mkString(" "))
     val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
     println("Graph created.")
 

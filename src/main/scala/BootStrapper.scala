@@ -9,7 +9,6 @@ object BootStrapper {
   def boot(bootCount: Int, proxySampleSize: Int, vertexList: List[Int], degrees: Map[Int, Int], seedSet: Set[Int]): List[Double] = {
     val bstrapDegrees: ListBuffer[Double] = new ListBuffer[Double]()
     val listLength: Int = vertexList.length
-    println("vertices "+vertexList.mkString(" "))
     for (i <- 1 to bootCount) {
       val kSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
       val kNonSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)

@@ -5,9 +5,9 @@ import org.apache.spark.{SparkContext, graphx}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
 
 /**
@@ -17,8 +17,7 @@ object GraphBootApproach2 {
 
 
   def graphBoot(px: Int, graph: Graph[Int, Int], degrees: Map[Int, Int], sc: SparkContext, sx: Int, patchCount: Int, wave: Int, bootCount: Int): String = {
-  println(wave+" wave")
-    val seedCount: PartitionID = 2//(graph.numVertices *sx/100).toInt
+    val seedCount: PartitionID = (graph.numVertices * sx / 100).toInt
     var patchDegrees: ListBuffer[Double] = new ListBuffer[Double]()
     val intervalLengths: ListBuffer[Double] = new ListBuffer[Double]()
     for (j <- 1 to patchCount) {
@@ -41,13 +40,11 @@ object GraphBootApproach2 {
       }
 
       val subList = Await.result(fut, Duration.Inf).flatten
-//      println(System.currentTimeMillis()-time1+" ms in lmsi")
       val proxySampleSize: PartitionID = 1 + (subList.size * px/100).toInt
 
       val seedSet: Set[PartitionID] = seeds.map(e => e._1.toInt).collect().toSet
 //      var time2 = System.currentTimeMillis()
       val bstrapDegrees: List[Double] = BootStrapper.boot(bootCount, proxySampleSize, subList, degrees, seedSet)
-//      println(System.currentTimeMillis()-time2+" ms in boot")
 
       val dc = (i: Double) => {
         DescriptiveStats.percentile(bstrapDegrees, i)
@@ -56,7 +53,6 @@ object GraphBootApproach2 {
       val M: Double = dc(0.5)
       patchDegrees += M;
       intervalLengths += length
-//      println("Patch M:" + M + " W:" + length)
     }
     val txt = Common.results(patchCount, graph, seedCount, patchDegrees, intervalLengths, degrees)
     return txt
@@ -65,15 +61,16 @@ object GraphBootApproach2 {
 
 
   def subgraphWithWave(initialGraph: Graph[Int, Int], wave: Int): Graph[Int, Int] = {
-    val dist = initialGraph.pregel(Int.MaxValue)(
+    val dist = initialGraph.pregel(150)(
       (id, dist, newDist) => Math.min(dist, newDist),
       triplet => {
         if (triplet.srcAttr + triplet.attr < triplet.dstAttr) {
           Iterator((triplet.dstId, triplet.srcAttr + triplet.attr))
         }
-        if (triplet.dstAttr + triplet.attr < triplet.srcAttr) {
+        else if (triplet.dstAttr + triplet.attr < triplet.srcAttr) {
           Iterator((triplet.srcId, triplet.dstAttr + triplet.attr))
-        }else {
+        }
+        else {
           Iterator.empty
         }
       },
@@ -82,7 +79,6 @@ object GraphBootApproach2 {
     val subGraph = dist.subgraph(vpred = ((vertexId, vertexDistance) => {
       vertexDistance <= wave
     }))
-    println("subgraph"+subGraph.vertices.collect().mkString(" "))
     subGraph
   }
 

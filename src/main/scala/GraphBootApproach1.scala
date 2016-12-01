@@ -30,9 +30,9 @@ object GraphBootApproach1 {
     val wave: Int = 3
     val bootCount: Int = 10
     val patchCount: Int = 10
-    var mu = 0.8
-    var sigma = 0.5
-    var vertices = 1000
+    var mu = 1.0
+    var sigma = 1.3
+    var vertices = 10000
     var sx = 2
     var px = 2
 

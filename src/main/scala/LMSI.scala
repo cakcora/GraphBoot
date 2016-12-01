@@ -1,5 +1,3 @@
-import org.apache.spark.graphx.{Edge, Graph}
-
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -7,10 +5,6 @@ import scala.collection.mutable.ListBuffer
   * Created by cxa123230 on 11/25/2016.
   */
 object LMSI {
-
-  def main(args: Array[String]): Unit = {
-
-  }
 
   def singleSeed(mList: mutable.Set[Tuple2[Int, Int]], seed:Int, wave:Int):List[Int]={
 
@@ -50,9 +44,6 @@ object LMSI {
       disc ++= phase
       mList--=rList
     }
-    println(seed+" lmsi "+ seenList.mkString(" "))
     seenList.toList
-
-
   }
 }
