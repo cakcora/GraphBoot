@@ -12,17 +12,16 @@ object LMSI {
 
   }
 
-  def singleSeed(mList: mutable.Set[Tuple2[Int, Int]], seed:Int):List[Int]={
+  def singleSeed(mList: mutable.Set[Tuple2[Int, Int]], seed:Int, wave:Int):List[Int]={
 
     val disc: mutable.HashSet[Int] = new mutable.HashSet[Int]()
-    var wave = 0;
-    val seen: ListBuffer[Int] = new ListBuffer[Int]()
-    seen.append(seed)
+    var w = 0;
+    val seenList: ListBuffer[Int] = new ListBuffer[Int]()
+    seenList.append(seed)
     disc.add(seed)
-
-    while (mList.size != 0&&wave<=4) {
+    while (mList.size != 0&&w<wave) {
       val phase: mutable.HashSet[Int] = new mutable.HashSet[Int]()
-      wave += 1
+      w += 1
       val seenSet: mutable.HashSet[Int] = new mutable.HashSet[Int]()
       var rList: mutable.Set[Tuple2[Int, Int]] = new mutable.HashSet[Tuple2[Int, Int]]()
       for ((a, b) <- mList) {
@@ -30,8 +29,8 @@ object LMSI {
         if (disc.contains(a)) {
           f = true
           if (disc.contains(b)) {
-            seen.append(b)
-            seen.append(a)
+            seenList.append(b)
+            seenList.append(a)
           }
           else {
             phase.add(b)
@@ -47,12 +46,12 @@ object LMSI {
           rList.add((a, b))
         }
       }
-      seen ++=seenSet
+      seenList ++=seenSet
       disc ++= phase
       mList--=rList
-//      println("\n**"+wave + " " + phase.size + " " + disc.size + " " + mList.size + " Seen vertices " + seen.mkString(" "))
     }
-    seen.toList
+    println(seed+" lmsi "+ seenList.mkString(" "))
+    seenList.toList
 
 
   }
