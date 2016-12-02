@@ -5,10 +5,8 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.{SparkContext, graphx}
 
 import scala.collection.mutable.ListBuffer
-import scala.util.Random
 
 /**
   * Created by cxa123230 on 11/3/2016.
@@ -44,7 +42,7 @@ object GraphBootApproach1 {
     val intervalLengths: ListBuffer[Double] = new ListBuffer[Double]()
     val degrees: Map[PartitionID, PartitionID] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
     for (j <- 1 to patchCount) {
-      val seeds: RDD[(VertexId, PartitionID)] = chooseSeeds(sc, graph, seedCount)
+      val seeds: RDD[(VertexId, PartitionID)] = Common.chooseSeeds(sc, graph, seedCount)
       var initialGraph: Graph[PartitionID, PartitionID] = graph.mapVertices((id, _) => 1500)
       initialGraph = initialGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
       val subGraph: Graph[PartitionID, PartitionID] = subgraphWithWave(initialGraph, wave)
@@ -87,17 +85,6 @@ object GraphBootApproach1 {
       vertexDistance <= wave
     }))
     subGraph
-  }
-
-  def chooseSeeds(sc: SparkContext, graph: Graph[Int, Int], seedCount: Int): RDD[(graphx.VertexId, Int)] = {
-    val vList: List[Int] = graph.vertices.collect().map(x => x._1.toInt).toList
-    val size = vList.length
-    val random = new Random()
-    var seedList: ListBuffer[(Long, Int)] = ListBuffer()
-    for (i <- 1 to seedCount) {
-      seedList += Tuple2(vList(random.nextInt(size)), 1)
-    }
-    sc.parallelize(seedList)
   }
 
 

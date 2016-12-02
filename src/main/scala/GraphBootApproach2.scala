@@ -1,14 +1,13 @@
 import breeze.stats.DescriptiveStats
+import org.apache.spark.SparkContext
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkContext, graphx}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import scala.util.Random
 
 /**
   * Created by cxa123230 on 11/3/2016.
@@ -21,7 +20,7 @@ object GraphBootApproach2 {
     var patchDegrees: ListBuffer[Double] = new ListBuffer[Double]()
     val intervalLengths: ListBuffer[Double] = new ListBuffer[Double]()
     for (j <- 1 to patchCount) {
-      val seeds: RDD[(VertexId, Int)] = chooseSeeds(sc, graph, seedCount)
+      val seeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, seedCount)
 
       val weightedGraph: Graph[Int, Int] = graph.mapVertices((id, _) => 1500)
       val lis = seeds.map(e => e._1.toInt).collect().toList
@@ -80,19 +79,6 @@ object GraphBootApproach2 {
       vertexDistance <= wave
     }))
     subGraph
-  }
-
-
-  def chooseSeeds(sc: SparkContext, graph: Graph[Int, Int], seedCount: Int): RDD[(graphx.VertexId, Int)] = {
-    val vList: List[Int] = graph.vertices.collect().map(x => x._1.toInt).toList
-    val size = vList.length
-    val random = new Random()
-    var seedList: ListBuffer[(Long, Int)] = ListBuffer()
-    for (i <- 1 to seedCount) {
-      val tuple: (VertexId, PartitionID) = Tuple2(vList(random.nextInt(size)), 0)
-      seedList += tuple
-    }
-    sc.parallelize(seedList)
   }
 
 

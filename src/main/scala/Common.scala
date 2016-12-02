@@ -1,4 +1,6 @@
 import org.apache.spark.graphx.{Graph, _}
+import org.apache.spark.rdd.RDD
+import org.apache.spark.{SparkContext, graphx}
 
 import scala.collection.mutable.ListBuffer
 
@@ -6,6 +8,10 @@ import scala.collection.mutable.ListBuffer
   * Created by cxa123230 on 11/29/2016.
   */
 object Common {
+  def chooseSeeds(sc: SparkContext, graph: Graph[Int, Int], seedCount: Int): RDD[(graphx.VertexId, Int)] = {
+    val sampled: Array[(graphx.VertexId, Int)] = graph.vertices.takeSample(false, seedCount).map(e => (e._1, 0))
+    sc.makeRDD(sampled)
+  }
 
   def results(patchCount: PartitionID, graph: Graph[PartitionID, PartitionID], seedCount: PartitionID, patchDegrees: ListBuffer[Double], intervalLengths: ListBuffer[Double], degrees: Map[PartitionID, PartitionID]): String = {
     val denom: Double = math.pow(patchCount, 0.5)
