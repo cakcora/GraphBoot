@@ -3,7 +3,6 @@ import org.apache.spark.SparkContext
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 
-import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
@@ -25,16 +24,13 @@ object GraphBootApproach2 {
       val weightedGraph: Graph[PartitionID, PartitionID] = Common.weightVertices(graph)
       val lis = seeds.map(e => e._1.toInt).collect().toList
       //      var time1 = System.currentTimeMillis()
-      var initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
-      val subGraph: Graph[Int, Int] = subgraphWithWave(initialGraph, wave)
-      val aList: Set[Edge[Int]] = subGraph.edges.collect().toSet
-      var mList: mutable.Set[Pair[Int, Int]] = new mutable.HashSet[Pair[Int, Int]]()
-      for (a <- aList) {
-        mList.add((a.srcId.toInt, a.dstId.toInt))
-      }
+      val initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
+      val subGraph: Graph[Int, Int] = Common.subgraphWithWave(initialGraph, wave)
+      val aList: RDD[(Int, Int)] = subGraph.edges.map(e => (e.srcId.toInt, e.dstId.toInt))
+
       val fut:Future[List[List[PartitionID]]] = Future.traverse(lis) { i =>
         Future {
-          LMSI.singleSeed(mList.clone(), i, wave)
+          LMSI.singleSeed(aList, i, wave)
         }
       }
 
@@ -59,27 +55,6 @@ object GraphBootApproach2 {
   }
 
 
-  def subgraphWithWave(initialGraph: Graph[Int, Int], wave: Int): Graph[Int, Int] = {
-    val dist = initialGraph.pregel(150)(
-      (id, dist, newDist) => Math.min(dist, newDist),
-      triplet => {
-        if (triplet.srcAttr + triplet.attr < triplet.dstAttr) {
-          Iterator((triplet.dstId, triplet.srcAttr + triplet.attr))
-        }
-        else if (triplet.dstAttr + triplet.attr < triplet.srcAttr) {
-          Iterator((triplet.srcId, triplet.dstAttr + triplet.attr))
-        }
-        else {
-          Iterator.empty
-        }
-      },
-      (a, b) => math.min(a, b)
-    )
-    val subGraph = dist.subgraph(vpred = ((vertexId, vertexDistance) => {
-      vertexDistance <= wave
-    }))
-    subGraph
-  }
 
 
 }

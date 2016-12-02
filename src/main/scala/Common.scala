@@ -8,6 +8,28 @@ import scala.collection.mutable.ListBuffer
   * Created by cxa123230 on 11/29/2016.
   */
 object Common {
+  def subgraphWithWave(initialGraph: Graph[Int, Int], wave: Int): Graph[Int, Int] = {
+    val dist = initialGraph.pregel(150)(
+      (id, dist, newDist) => Math.min(dist, newDist),
+      triplet => {
+        if (triplet.srcAttr + triplet.attr < triplet.dstAttr) {
+          Iterator((triplet.dstId, triplet.srcAttr + triplet.attr))
+        }
+        else if (triplet.dstAttr + triplet.attr < triplet.srcAttr) {
+          Iterator((triplet.srcId, triplet.dstAttr + triplet.attr))
+        }
+        else {
+          Iterator.empty
+        }
+      },
+      (a, b) => math.min(a, b)
+    )
+    val subGraph = dist.subgraph(vpred = ((vertexId, vertexDistance) => {
+      vertexDistance <= wave
+    }))
+    subGraph
+  }
+
   def chooseSeeds(sc: SparkContext, graph: Graph[Int, Int], seedCount: Int): RDD[(graphx.VertexId, Int)] = {
     val sampled: Array[(graphx.VertexId, Int)] = graph.vertices.takeSample(false, seedCount).map(e => (e._1, 0))
     sc.makeRDD(sampled)

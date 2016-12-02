@@ -45,7 +45,7 @@ object GraphBootApproach1 {
       val seeds: RDD[(VertexId, PartitionID)] = Common.chooseSeeds(sc, graph, seedCount)
       var initialGraph: Graph[PartitionID, PartitionID] = Common.weightVertices(graph)
       initialGraph = initialGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
-      val subGraph: Graph[PartitionID, PartitionID] = subgraphWithWave(initialGraph, wave)
+      val subGraph: Graph[PartitionID, PartitionID] = Common.subgraphWithWave(initialGraph, wave)
       val proxySampleSize: PartitionID = 1 + (subGraph.numVertices / px).toInt
 
 
@@ -66,25 +66,6 @@ object GraphBootApproach1 {
     fw.write(options("mu") + "\t" + options("sigma") + "\t" + options("vertices") + "\t" + seedCount + "\t" + bootCount + "\t" + patchCount + "\t" + px + "\t" + txt + "\n")
     fw.flush()
     sc.stop()
-  }
-
-
-  def subgraphWithWave(initialGraph: Graph[Int, Int], wave: Int): Graph[Int, Int] = {
-    val dist = initialGraph.pregel(Int.MaxValue)(
-      (id, dist, newDist) => Math.min(dist, newDist),
-      triplet => {
-        if (triplet.srcAttr + triplet.attr < triplet.dstAttr) {
-          Iterator((triplet.dstId, triplet.srcAttr + triplet.attr))
-        } else {
-          Iterator.empty
-        }
-      },
-      (a, b) => math.min(a, b)
-    )
-    val subGraph = dist.subgraph(vpred = ((vertexId, vertexDistance) => {
-      vertexDistance <= wave
-    }))
-    subGraph
   }
 
 
