@@ -43,7 +43,7 @@ object GraphBootApproach1 {
     val degrees: Map[PartitionID, PartitionID] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
     for (j <- 1 to patchCount) {
       val seeds: RDD[(VertexId, PartitionID)] = Common.chooseSeeds(sc, graph, seedCount)
-      var initialGraph: Graph[PartitionID, PartitionID] = graph.mapVertices((id, _) => 1500)
+      var initialGraph: Graph[PartitionID, PartitionID] = Common.weightVertices(graph)
       initialGraph = initialGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
       val subGraph: Graph[PartitionID, PartitionID] = subgraphWithWave(initialGraph, wave)
       val proxySampleSize: PartitionID = 1 + (subGraph.numVertices / px).toInt

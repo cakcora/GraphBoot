@@ -22,7 +22,7 @@ object GraphBootApproach2 {
     for (j <- 1 to patchCount) {
       val seeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, seedCount)
 
-      val weightedGraph: Graph[Int, Int] = graph.mapVertices((id, _) => 1500)
+      val weightedGraph: Graph[PartitionID, PartitionID] = Common.weightVertices(graph)
       val lis = seeds.map(e => e._1.toInt).collect().toList
       //      var time1 = System.currentTimeMillis()
       var initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))

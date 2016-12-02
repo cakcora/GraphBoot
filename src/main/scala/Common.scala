@@ -13,6 +13,9 @@ object Common {
     sc.makeRDD(sampled)
   }
 
+  def weightVertices(graph: Graph[PartitionID, PartitionID]): Graph[PartitionID, PartitionID] = {
+    graph.mapVertices((id, _) => 1500)
+  }
   def results(patchCount: PartitionID, graph: Graph[PartitionID, PartitionID], seedCount: PartitionID, patchDegrees: ListBuffer[Double], intervalLengths: ListBuffer[Double], degrees: Map[PartitionID, PartitionID]): String = {
     val denom: Double = math.pow(patchCount, 0.5)
     val nom: Double = Math.pow(intervalLengths.map(e => e * e).sum / patchCount, 0.5)
