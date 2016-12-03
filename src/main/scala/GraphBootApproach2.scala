@@ -23,23 +23,18 @@ object GraphBootApproach2 {
 
       val weightedGraph: Graph[PartitionID, PartitionID] = Common.weightVertices(graph)
       val lis = seeds.map(e => e._1.toInt).collect().toList
-      //      var time1 = System.currentTimeMillis()
       val initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
       val subGraph: Graph[Int, Int] = Common.subgraphWithWave(initialGraph, wave)
-      val aList: RDD[(Int, Int)] = subGraph.edges.map(e => (e.srcId.toInt, e.dstId.toInt))
 
       val fut:Future[List[List[PartitionID]]] = Future.traverse(lis) { i =>
         Future {
-          LMSI.singleSeed(aList, i, wave)
+          LMSI.singleSeed(subGraph.edges, i, wave)
         }
       }
 
       val subList = Await.result(fut, Duration.Inf).flatten
-      val proxySampleSize: PartitionID = 1 + (subList.size * px/100).toInt
 
-      val seedSet: Set[PartitionID] = seeds.map(e => e._1.toInt).collect().toSet
-//      var time2 = System.currentTimeMillis()
-      val bstrapDegrees: List[Double] = BootStrapper.boot(bootCount, proxySampleSize, subList, degrees, seedSet)
+      val bstrapDegrees: List[Double] = BootStrapper.boot(bootCount, px, subList, degrees, seeds)
 
       val dc = (i: Double) => {
         DescriptiveStats.percentile(bstrapDegrees, i)

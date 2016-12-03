@@ -29,11 +29,12 @@ object SynthExperimentDriver {
     var sx, sxX: Int = 1
     var px, pxX = 40
     val options = Map(("mu", mu), ("sigma", sigma), ("vertices", vertices))
-    val graph: Graph[PartitionID, PartitionID] = GraphCleaning.cleanGraph(sc, SyntheticData.synthGraphGenerator(sc, "lognormal", options))
+    val graph: Graph[PartitionID, PartitionID] = GraphCleaning.cleanGraph(sc, SyntheticData.synthGraphGenerator(sc, "grid", options))
     val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
     println("Graph created.")
 
     for (wave <- 1 to 4 by 1) {
+      println("wave: " + wave)
       val txt = GraphBootApproach2.graphBoot(px, graph, degrees, sc, sx, patchCount, wave, bootCount)
       fw.write(wave+"\t"+mu + "\t" + sigma + "\t" + vertices + "\t" + sx + "\t" + bootCount + "\t" + patchCount + "\t" + px + "\t" + txt + "\n")
       fw.flush()
@@ -46,13 +47,15 @@ object SynthExperimentDriver {
       fw.flush()
     }
     px = pxX
-    for (sx <- 20 to 100 by 10) {
+    for (sx <- 1 to 30 by 2) {
+      println("sx: " + sx)
       val txt = GraphBootApproach2.graphBoot(px, graph, degrees, sc, sx, patchCount, wave, bootCount)
       fw.write(wave+"\t"+mu + "\t" + sigma + "\t" + vertices + "\t" + sx + "\t" + bootCount + "\t" + patchCount + "\t" + px + "\t" + txt + "\n")
       fw.flush()
     }
     sx = sxX
     for (patchCount <- 1 to 10 by 1) {
+      println("patch: " + patchCount)
       val txt = GraphBootApproach2.graphBoot(px, graph, degrees, sc, sx, patchCount, wave, bootCount)
       fw.write(wave+"\t"+mu + "\t" + sigma + "\t" + vertices + "\t" + sx + "\t" + bootCount + "\t" + patchCount + "\t" + px + "\t" + txt + "\n")
       fw.flush()

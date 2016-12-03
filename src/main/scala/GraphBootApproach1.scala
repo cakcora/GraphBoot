@@ -51,8 +51,7 @@ object GraphBootApproach1 {
 
       val vertexList: List[PartitionID] = subGraph.vertices.collect().map(x => x._1.toInt).toList
 
-      val seedSet: Set[PartitionID] = seeds.map(e => e._1.toInt).collect().toSet
-      val bstrapDegrees: List[Double] = BootStrapper.boot(bootCount, proxySampleSize, vertexList, degrees, seedSet)
+      val bstrapDegrees: List[Double] = BootStrapper.boot(bootCount, proxySampleSize, vertexList, degrees, seeds)
       val dc = (i: Double) => {
         DescriptiveStats.percentile(bstrapDegrees, i)
       }

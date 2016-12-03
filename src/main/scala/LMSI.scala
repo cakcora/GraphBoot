@@ -1,4 +1,4 @@
-import org.apache.spark.rdd.RDD
+import org.apache.spark.graphx.EdgeRDD
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -8,19 +8,20 @@ import scala.collection.mutable.ListBuffer
   */
 object LMSI {
 
-  def singleSeed(mList: RDD[(Int, Int)], seed: Int, wave: Int): List[Int] = {
-    var li: ListBuffer[(Int, Int)] = mList.collect().to[ListBuffer]
+  def singleSeed(mList: EdgeRDD[Int], seed: Int, wave: Int): List[Int] = {
+    var li: ListBuffer[(Int, Int)] = mList.map(e => (e.srcId.toInt, e.dstId.toInt)).collect().to[ListBuffer]
     val disc: mutable.HashSet[Int] = new mutable.HashSet[Int]()
-    var w = 0;
     val seenList: ListBuffer[Int] = new ListBuffer[Int]()
     seenList.append(seed)
     disc.add(seed)
+
+    var w = 0;
     while (li.size != 0 && w < wave) {
       val phase: mutable.HashSet[Int] = new mutable.HashSet[Int]()
       w += 1
       val seenSet: mutable.HashSet[Int] = new mutable.HashSet[Int]()
-      var rList: mutable.Set[Tuple2[Int, Int]] = new mutable.HashSet[Tuple2[Int, Int]]()
-      for ((a, b) <- mList) {
+      var rList: mutable.Set[(Int, Int)] = new mutable.HashSet[(Int, Int)]()
+      for ((a, b) <- li) {
         var f = false
         if (disc.contains(a)) {
           f = true

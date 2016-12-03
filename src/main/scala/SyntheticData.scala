@@ -1,10 +1,7 @@
+import org.apache.spark.SparkContext
 import org.apache.spark.graphx.util.GraphGenerators
 import org.apache.spark.graphx.{Graph, GraphLoader, PartitionStrategy}
-import org.apache.spark.{SparkContext, graphx}
 import org.apache.spark.rdd.RDD
-
-import scala.collection.mutable.ListBuffer
-import scala.util.Random
 
 /**
   * Created by cxa123230 on 11/3/2016.
@@ -22,7 +19,8 @@ object SyntheticData {
 
     graphType match {
       case "grid" => {
-        val g: Graph[(Int, Int), Double] = GraphGenerators.gridGraph(sc, 50, 50)
+        val dim = Math.pow(options("vertices").asInstanceOf[Int], 0.5).toInt
+        val g: Graph[(Int, Int), Double] = GraphGenerators.gridGraph(sc, dim, dim)
         val gra: Graph[Int, Int] = g.mapVertices((a, b) => 1).mapEdges(a => 1)
         GraphCleaning.cleanGraph(sc, gra)
       }
