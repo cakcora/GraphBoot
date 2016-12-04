@@ -19,6 +19,7 @@ object GraphBootApproach2 {
     var patchDegrees: ListBuffer[Double] = new ListBuffer[Double]()
     val intervalLengths: ListBuffer[Double] = new ListBuffer[Double]()
     for (j <- 1 to patchCount) {
+      println("patch " + j)
       val seeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, seedCount)
 
       val weightedGraph: Graph[PartitionID, PartitionID] = Common.weightVertices(graph)

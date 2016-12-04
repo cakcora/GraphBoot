@@ -1,9 +1,10 @@
+import java.util.concurrent.ThreadLocalRandom
+
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.util.Random
 
 /**
   * Created by cxa123230 on 11/29/2016.
@@ -17,7 +18,7 @@ object BootStrapper {
     for (i <- 1 to bootCount) {
       val kSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
       val kNonSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
-      val random: Random = new Random()
+      val random: ThreadLocalRandom = ThreadLocalRandom.current()
 
       for (j <- 1 to proxySampleSize) {
         val chosen: Int = vertexList(random.nextInt(listLength))
