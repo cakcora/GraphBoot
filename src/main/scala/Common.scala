@@ -8,6 +8,7 @@ import scala.collection.mutable.ListBuffer
   * Created by cxa123230 on 11/29/2016.
   */
 object Common {
+
   def subgraphWithWave(initialGraph: Graph[Int, Int], wave: Int): Graph[Int, Int] = {
     val dist = initialGraph.pregel(150)(
       (id, dist, newDist) => Math.min(dist, newDist),
@@ -24,6 +25,7 @@ object Common {
       },
       (a, b) => math.min(a, b)
     )
+
     val subGraph = dist.subgraph(vpred = ((vertexId, vertexDistance) => {
       vertexDistance <= wave
     }))
