@@ -1,3 +1,4 @@
+import breeze.stats.DescriptiveStats
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
@@ -34,15 +35,15 @@ object GraphBootApproach2 {
 
       val subList = Await.result(fut, Duration.Inf).flatten
 
-      //      val bstrapDegrees: List[Double] = BootStrapper.boot(bootCount, px, subList, degrees, seeds)
-      //
-      //      val dc = (i: Double) => {
-      //        DescriptiveStats.percentile(bstrapDegrees, i)
-      //      }
-      //      val length: Double = 0.5 * (dc(0.95) - dc(0.05))
-      //      val M: Double = dc(0.5)
-      //      patchDegrees += M;
-      //      intervalLengths += length
+      val bstrapDegrees: List[Double] = BootStrapper.boot(bootCount, px, subList, degrees, seeds)
+
+      val dc = (i: Double) => {
+        DescriptiveStats.percentile(bstrapDegrees, i)
+      }
+      val length: Double = 0.5 * (dc(0.95) - dc(0.05))
+      val M: Double = dc(0.5)
+      patchDegrees += M;
+      intervalLengths += length
     }
     val txt = Common.results(patchCount, graph, seedCount, patchDegrees, intervalLengths, degrees)
     return txt

@@ -29,7 +29,7 @@ object SynthExperimentDriver {
     var sx, sxX: Int = 1
     var px, pxX = 40
     val options = Map(("mu", mu), ("sigma", sigma), ("vertices", vertices))
-    val graph: Graph[PartitionID, PartitionID] = GraphCleaning.cleanGraph(sc, SyntheticData.synthGraphGenerator(sc, "grid", options))
+    val graph: Graph[PartitionID, PartitionID] = GraphCleaning.cleanGraph(sc, SyntheticData.synthGraphGenerator(sc, "lognormal", options))
     val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
     println("Graph created.")
 
@@ -61,7 +61,7 @@ object SynthExperimentDriver {
       fw.flush()
     }
     patchCount = patchCountX
-    for (bootCount <- 1 to 1000 by 50) {
+    for (bootCount <- 1 to 500 by 50) {
       val txt = GraphBootApproach2.graphBootAllSubGraph(px, graph, degrees, sc, sx, patchCount, wave, bootCount)
       fw.write(wave+"\t"+mu + "\t" + sigma + "\t" + vertices + "\t" + sx + "\t" + bootCount + "\t" + patchCount + "\t" + px + "\t" + txt + "\n")
       fw.flush()
