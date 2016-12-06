@@ -10,7 +10,7 @@ object SyntheticData {
 
   def getTestGraph(sc: SparkContext): Graph[Int, Int] = {
     val re: RDD[(Long, Long)] = sc.parallelize(Array((1L, 2L), (1L, 3L),
-      (2L, 4L), (2L, 5L), (5L, 6L), (2L, 6L), (6L, 7L)))
+      (2L, 4L), (2L, 5L), (5L, 4L), (5L, 6L), (4L, 7L)))
     val tupleGraph = Graph.fromEdgeTuples(re, defaultValue = 1,
       uniqueEdges = Some(PartitionStrategy.RandomVertexCut))
     tupleGraph

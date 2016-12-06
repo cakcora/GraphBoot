@@ -8,7 +8,17 @@ import scala.collection.mutable.ListBuffer
   * Created by cxa123230 on 11/29/2016.
   */
 object Common {
-
+  def findWaveEdges(graph: Graph[Int, Int], seed: Int, wave: Int): RDD[Edge[Int]] = {
+    //    if(wave<1) new SparkException("You requested an in valid subgraph, wave="+wave)
+    var neigh0: Array[VertexId] = Array(seed)
+    var d: RDD[Edge[Int]] = graph.edges.filter(e => (seed == e.dstId) || (seed == e.srcId))
+    for (v <- 2 to wave) {
+      neigh0 = d.flatMap(e => List(e.srcId, e.dstId)).distinct().collect()
+      d = graph.edges.filter(e => neigh0.contains(e.dstId) || neigh0.contains(e.srcId))
+    }
+    //    println(wave+" " +d.collect().mkString(" "))
+    return d
+  }
   def subgraphWithWave(initialGraph: Graph[Int, Int], wave: Int): Graph[Int, Int] = {
     val dist = initialGraph.pregel(150)(
       (id, dist, newDist) => Math.min(dist, newDist),
