@@ -25,7 +25,7 @@ object SynthExperimentDriver {
     var patchCount, patchCountX = 10
     var mu, muX = 1.0
     var sigma, sigmaX = 1.3
-    var vertices, verticesX = 1000
+    var vertices, verticesX = 10000
     var sx, sxX: Int = 10
     var px, pxX = 40
     val options = Map(("mu", mu), ("sigma", sigma), ("vertices", vertices))
@@ -54,7 +54,7 @@ object SynthExperimentDriver {
       fw.flush()
     }
     px = pxX
-    for (sx <- 1 to 30 by 2) {
+    for (sx <- 1 to 300 by 15) {
       println("sx: " + sx)
       val txt = GraphBootApproach2.graphBootAllSubGraph(px, graph, degrees, sc, sx, patchCount, wave, bootCount)
       fw.write(wave+"\t"+mu + "\t" + sigma + "\t" + vertices + "\t" + sx + "\t" + bootCount + "\t" + patchCount + "\t" + px + "\t" + txt + "\n")
@@ -63,12 +63,15 @@ object SynthExperimentDriver {
     sx = sxX
 
     for (bootCount <- 1 to 500 by 50) {
+      println("boot: " + bootCount)
       val txt = GraphBootApproach2.graphBootAllSubGraph(px, graph, degrees, sc, sx, patchCount, wave, bootCount)
       fw.write(wave+"\t"+mu + "\t" + sigma + "\t" + vertices + "\t" + sx + "\t" + bootCount + "\t" + patchCount + "\t" + px + "\t" + txt + "\n")
       fw.flush()
     }
     bootCount = bootCountX
+    for (v <- 1 to 10)
     for (mu <- 1.0 to 3.0 by 0.5) {
+      println("mu: " + mu)
       val options3 = Map(("mu", mu), ("sigma", sigma), ("vertices", vertices))
       val graph3: Graph[PartitionID, PartitionID] = GraphCleaning.cleanGraph(sc, SyntheticData.synthGraphGenerator(sc, "lognormal", options3))
       val degrees3: Map[Int, Int] = graph3.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
@@ -77,7 +80,9 @@ object SynthExperimentDriver {
       fw.flush()
     }
     mu = muX
+    for (v <- 1 to 10)
     for (sigma <- 0.0 to 2.0 by 0.2) {
+      println("sigma: " + sigma)
       val opX = Map(("mu", mu), ("sigma", sigma), ("vertices", vertices))
       val grX: Graph[PartitionID, PartitionID] = GraphCleaning.cleanGraph(sc, SyntheticData.synthGraphGenerator(sc, "lognormal", opX))
       val degX: Map[Int, Int] = grX.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
@@ -88,6 +93,7 @@ object SynthExperimentDriver {
     }
     sigma = sigmaX
     for (vertices <- 10000 to 100000 by 10000) {
+      println("vertices: " + vertices)
       val opX = Map(("mu", mu), ("sigma", sigma), ("vertices", vertices))
       val grX: Graph[PartitionID, PartitionID] = GraphCleaning.cleanGraph(sc, SyntheticData.synthGraphGenerator(sc, "lognormal", opX))
       val degX: Map[Int, Int] = grX.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
