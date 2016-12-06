@@ -15,21 +15,22 @@ object GraphBootApproach2 {
 
 
   def graphBootAllSubGraph(px: Int, graph: Graph[Int, Int], degrees: Map[Int, Int], sc: SparkContext, sx: Int, patchCount: Int, wave: Int, bootCount: Int): String = {
-    val seedCount: PartitionID = (graph.numVertices * sx / 100).toInt
+    val seedCount: PartitionID = sx //(graph.numVertices * sx / 100).toInt
     var patchDegrees: ListBuffer[Double] = new ListBuffer[Double]()
     val intervalLengths: ListBuffer[Double] = new ListBuffer[Double]()
     for (j <- 1 to patchCount) {
-      println("patch " + j)
+      //      println("patch " + j)
       val seeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, seedCount)
 
       val weightedGraph: Graph[PartitionID, PartitionID] = Common.weightVertices(graph)
       val lis = seeds.map(e => e._1.toInt).collect().toList
       val initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
-      val subGraph: Graph[Int, Int] = Common.subgraphWithWave(initialGraph, wave)
+      //      val subGraph: Graph[Int, Int] = Common.subgraphWithWave(initialGraph, wave)
 
       val fut:Future[List[List[PartitionID]]] = Future.traverse(lis) { i =>
+        val localEdges: RDD[Edge[PartitionID]] = Common.findWaveEdges(initialGraph, i, wave)
         Future {
-          LMSI.singleSeed(subGraph, i, wave)
+          LMSI.singleSeed(localEdges, i, wave)
         }
       }
 

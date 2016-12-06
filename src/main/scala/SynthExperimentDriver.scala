@@ -20,13 +20,13 @@ object SynthExperimentDriver {
     val header = "wave\tmu\tsigma\tvertices\tseedCount\tbootCount\tpatchCount\tpx\tnumVertices\tnumEdges\tmean\tavgGraphDeg\tvarianceOfpatchDegrees\tC\n"
     fw.write(header);
 
-    var wave, waveX = 3
+    var wave, waveX = 2
     var bootCount, bootCountX = 10
     var patchCount, patchCountX = 10
     var mu, muX = 1.0
     var sigma, sigmaX = 1.3
-    var vertices, verticesX = 300
-    var sx, sxX: Int = 1
+    var vertices, verticesX = 1000
+    var sx, sxX: Int = 10
     var px, pxX = 40
     val options = Map(("mu", mu), ("sigma", sigma), ("vertices", vertices))
     val graph: Graph[PartitionID, PartitionID] = GraphCleaning.cleanGraph(sc, SyntheticData.synthGraphGenerator(sc, "lognormal", options))

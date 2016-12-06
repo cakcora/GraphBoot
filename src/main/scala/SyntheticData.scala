@@ -38,6 +38,9 @@ object SyntheticData {
       case "dblp" => {
         GraphLoader.edgeListFile(sc, "src/main/resources/dblpgraph.txt")
       }
+      case "slava" => {
+        GraphLoader.edgeListFile(sc, "src/main/resources/dataFromSlava.txt")
+      }
       case _: String => {
         println("No preference for graph type: Using a random star graph.")
         GraphGenerators.starGraph(sc, 100)
