@@ -25,7 +25,7 @@ object SynthExperimentDriver {
     var patchCount, patchCountX = 10
     var mu, muX = 1.0
     var sigma, sigmaX = 1.3
-    var vertices, verticesX = 1000
+    var vertices, verticesX = 300
     var sx, sxX: Int = 1
     var px, pxX = 40
     val options = Map(("mu", mu), ("sigma", sigma), ("vertices", vertices))
@@ -33,6 +33,13 @@ object SynthExperimentDriver {
     val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
     println("Graph created.")
 
+    for (patchCount <- 1 to 10 by 1) {
+      println("patch: " + patchCount)
+      val txt = GraphBootApproach2.graphBootAllSubGraph(px, graph, degrees, sc, sx, patchCount, wave, bootCount)
+      fw.write(wave + "\t" + mu + "\t" + sigma + "\t" + vertices + "\t" + sx + "\t" + bootCount + "\t" + patchCount + "\t" + px + "\t" + txt + "\n")
+      fw.flush()
+    }
+    patchCount = patchCountX
     for (wave <- 1 to 4 by 1) {
       println("wave: " + wave)
       val txt = GraphBootApproach2.graphBootAllSubGraph(px, graph, degrees, sc, sx, patchCount, wave, bootCount)
@@ -54,13 +61,7 @@ object SynthExperimentDriver {
       fw.flush()
     }
     sx = sxX
-    for (patchCount <- 1 to 10 by 1) {
-      println("patch: " + patchCount)
-      val txt = GraphBootApproach2.graphBootAllSubGraph(px, graph, degrees, sc, sx, patchCount, wave, bootCount)
-      fw.write(wave+"\t"+mu + "\t" + sigma + "\t" + vertices + "\t" + sx + "\t" + bootCount + "\t" + patchCount + "\t" + px + "\t" + txt + "\n")
-      fw.flush()
-    }
-    patchCount = patchCountX
+
     for (bootCount <- 1 to 500 by 50) {
       val txt = GraphBootApproach2.graphBootAllSubGraph(px, graph, degrees, sc, sx, patchCount, wave, bootCount)
       fw.write(wave+"\t"+mu + "\t" + sigma + "\t" + vertices + "\t" + sx + "\t" + bootCount + "\t" + patchCount + "\t" + px + "\t" + txt + "\n")
