@@ -1,0 +1,117 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+
+```{r}
+library(ggplot2)
+library(plyr)
+
+ex <- read.table(file="C:/Users/cxa123230/IdeaProjects/GraphBoot/approach2.txt", header=TRUE,sep="\t")
+#ex$mu<-round(ex$mu,2)
+summary(ex)
+```
+
+```{r}
+ex6 <- read.table(file="C:/Users/cxa123230/IdeaProjects/GraphBoot/wave.txt", header=TRUE,sep="\t")
+ 
+waveEffect<-ddply(ex6,.(wave),summarise,V2=mean(mean/avgGraphDeg),V3=mean(meanOfintervalLengths))
+m61<-ggplot(waveEffect, aes(wave)) + geom_line(size=1,aes(y = V2))+labs(color="")+scale_x_continuous(name="wave")+scale_y_continuous(name=expression(paste(bar(x)," / ",mu)))+ expand_limits(y = 1)
+m61
+
+m62<-ggplot(waveEffect, aes(wave)) + geom_line(size=1,aes(y = V3))+labs(color="")+scale_x_continuous(name="wave")+scale_y_continuous(name="mean interval length")+ expand_limits(y = 1)
+m62
+```
+
+
+```{r}
+ex41<-ex[ex$mu==1.0&ex$sigma==1.3&ex$numVertices>10000,]
+#ex41$numVertices<-as.integer(ex41$numVertices/10000)
+vertexEffect<-ddply(ex41,.(numVertices),summarise,meanRatio=mean(mean/avgGraphDeg))
+m41<-ggplot(vertexEffect, aes(numVertices)) + geom_point(size=1,aes(y = meanRatio))+labs(color="")+scale_x_continuous(name="number of vertices in the graph")+scale_y_continuous(name=expression(paste(bar(x)," / ",mu)))+labs(title = expression(paste("Graphboot with LogNormal(",mu,"=1,",sigma,"=",1.3,") graphs")))+ expand_limits(y = 1.4)
+m41
+```
+
+
+```{r}
+ex0<-ex
+
+basics<-ddply(ex0,.(mu),summarise,V2=mean(numEdges/numVertices))
+m01<-ggplot(basics, aes(mu)) + geom_line(size=1,aes(y = V2))+labs(color="")+scale_x_continuous(name=expression(paste("location parameter, ", mu)))+scale_y_continuous(name="Avg number of edges") 
+m01
+
+basics1<-ddply(ex0,.(sigma),summarise,V1=mean(numEdges/numVertices))
+m0<-ggplot(basics1, aes(sigma)) + geom_line(size=1,aes(y = V1))+labs(color="")+scale_x_continuous(name=expression(paste("scale parameter, ", sigma)))+scale_y_continuous(name="ratio of number of edges to vertices") 
+m0
+```
+
+
+```{r}
+ex1<-ex[ex$mu==1.0&ex$sigma!=1.3,]
+sigmaEffect<-ddply(ex1,.(sigma),summarise,meanRatio=mean(mean/avgGraphDeg))
+m1<-ggplot(sigmaEffect, aes(sigma)) + geom_line(size=1,aes(y = meanRatio))+labs(color="")+scale_x_continuous(name=expression(paste("Scale parameter, ", sigma)))+scale_y_continuous(name=expression(paste(bar(x)," / ",mu)))+labs(title = expression(paste("Graphboot with LogNormal(",mu,"=",1,",",sigma,") graphs")))
+m1
+
+sigmaEffect<-ddply(ex1,.(sigma),summarise,meanRatio=mean(meanOfintervalLengths))
+m12<-ggplot(sigmaEffect, aes(sigma)) + geom_line(size=1,aes(y = meanRatio))+labs(color="")+scale_x_continuous(name=expression(paste("Scale parameter, ", sigma)))+scale_y_continuous(name="avg interval length for 0.1")+labs(title = expression(paste("Graphboot with LogNormal(",mu,"=",1,",",sigma,") graphs")))
+m12
+
+sigmaEffect<-ddply(ex1,.(sigma),summarise,meanRatio=mean(varianceOfpatchDegrees))
+m12<-ggplot(sigmaEffect, aes(sigma)) + geom_line(size=1,aes(y = meanRatio))+labs(color="")+scale_x_continuous(name=expression(paste("Scale parameter, ", sigma)))+scale_y_continuous(name="Variance of patch degrees")+labs(title = expression(paste("Graphboot with LogNormal(",mu,"=",1,",",sigma,") graphs")))
+m12
+```
+
+```{r}
+ex2<-ex[ex$mu!=1.0&ex$sigma==1.3&ex$seedCount==10&ex$bootCount==100&ex$px==100,]
+muEffect<-ddply(ex2,.(mu),summarise,meanRatio=mean(mean/avgGraphDeg))
+m21<-ggplot(muEffect, aes(mu)) + geom_line(size=1,aes(y = meanRatio))+labs(color="")+scale_x_continuous(name=expression(paste("Location parameter, ", mu)))+scale_y_continuous(name=expression(paste(bar(x)," / ",mu)))+labs(title = expression(paste("Graphboot with LogNormal(",mu,",",sigma,"=",1.3,") graphs")))
+m21
+
+
+muEffect<-ddply(ex2,.(mu),summarise,meanRatio=mean(meanOfintervalLengths))
+m22<-ggplot(muEffect, aes(mu)) + geom_line(size=1,aes(y = meanRatio))+labs(color="")+scale_x_continuous(name=expression(paste("Location parameter, ", mu)))+scale_y_continuous(name="avg interval length for 0.1")+labs(title = expression(paste("Graphboot with LogNormal(",mu,",",sigma,"=",1.3,") graphs")))
+m22
+
+muEffect<-ddply(ex2,.(mu),summarise,meanRatio=mean(varianceOfpatchDegrees))
+m23<-ggplot(muEffect, aes(mu)) + geom_line(size=1,aes(y = meanRatio))+labs(color="")+scale_x_continuous(name=expression(paste("Location parameter, ", mu)))+scale_y_continuous(name="Variance of patch degrees")+labs(title = expression(paste("Graphboot with LogNormal(",mu,",",sigma,"=",1.3,") graphs")))
+m23
+
+
+```
+
+```{r}
+ex31<-ex[ex$mu==1.0&ex$sigma==1.3&ex$seedCount==10&ex$px==100,]
+bootEffect<-ddply(ex31,.(bootCount),summarise,meanRatio=mean(mean/avgGraphDeg))
+m31<-ggplot(bootEffect, aes(bootCount)) + geom_line(size=1,aes(y = meanRatio))+labs(color="")+scale_x_continuous(name="boot count")+scale_y_continuous(name=expression(paste(bar(x)," / ",mu)))+labs(title = expression(paste("Graphboot with LogNormal(",mu,"=1,",sigma,"=",1.3,") graphs")))+ expand_limits(y = 1.5)
+m31
+
+ex32<-ex[ex$mu==1.0&ex$sigma==1.3&ex$bootCount==100&ex$px==100,]
+seedEffect<-ddply(ex32,.(seedCount),summarise,meanRatio=mean(mean/avgGraphDeg))
+m32<-ggplot(seedEffect, aes(seedCount)) + geom_line(size=1,aes(y = meanRatio))+labs(color="")+scale_x_continuous(name="seed count")+scale_y_continuous(name=expression(paste(bar(x)," / ",mu)))+labs(title = expression(paste("Graphboot with LogNormal(",mu,"=1,",sigma,"=",1.3,") graphs")))+ expand_limits(y = 1.4)
+m32
+
+ex33<-ex[ex$mu==1.0&ex$sigma==1.3&ex$bootCount==100&ex$seedCount==10,]
+proxyEffect<-ddply(ex33,.(px),summarise,meanRatio=mean(mean/avgGraphDeg))
+m33<-ggplot(proxyEffect, aes(px)) + geom_line(size=1,aes(y = meanRatio))+labs(color="")+scale_x_continuous(name="proxy percentage")+scale_y_continuous(name=expression(paste(bar(x)," / ",mu)))+labs(title = expression(paste("Graphboot with LogNormal(",mu,"=1,",sigma,"=",1.3,") graphs")))+ expand_limits(y = 1.5)
+m33
+```
+
+
+
+```{r}
+combed<- read.table(file="C:/Users/cxa123230/IdeaProjects/GraphBoot/combined.txt", header=TRUE,sep="\t")
+ 
+combed$sigma<-as.factor(combed$sigma)
+combed$mu<-as.factor(combed$mu)
+combed<-ddply(ex51,.(mu,sigma),summarise,value=mean(mean/avgGraphDeg))
+ggplot(combed, aes(x=sigma, y=value, group = mu,  color=mu)) +
+     geom_line( size=2) 
+ 
+
+```
+
