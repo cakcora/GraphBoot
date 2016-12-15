@@ -1,3 +1,5 @@
+import java.io.FileWriter
+
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
@@ -26,9 +28,9 @@ object Tester {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
-    val options = Map(("mu", 2.0), ("sigma", 1.3), ("vertices", 1000))
-
-    val gr: Graph[Int, Int] = SyntheticData.synthGraphGenerator(sc, "slava", options)
+    val options = Map(("mu", 2.0), ("sigma", 1.3), ("vertices", 100))
+    val fw = new FileWriter("waveApp3.txt", true);
+    val gr: Graph[Int, Int] = SyntheticData.synthGraphGenerator(sc, "lognormal", options)
     val g: Graph[Int, Int] = SyntheticData.getTestGraph(sc)
     val graph = GraphCleaning.cleanGraph(sc, gr)
 
@@ -42,11 +44,12 @@ object Tester {
 
     for (wave <- 1 to 4) {
       var t = System.currentTimeMillis()
-      val txt = GraphBootApproach2.graphBootAllSubGraph(px = 100, graph, degrees, sc, sx = 10, patchCount = 3, wave, bootCount = 10)
-      println(wave + "\t" + 2 + "\t" + 1.3 + "\t" + 5 + "\t" + 100 + "\t" + 10 + "\t" + 3 + "\t" + 100 + "\t" + txt + "\n")
+      val txt = GraphBootApproach2.graphBootAllSubGraph(100, graph, degrees, sc, 10, 10, wave, 50)
+      fw.write(wave + "\t" + 2 + "\t" + 1.3 + "\t" + 5 + "\t" + 100 + "\t" + 10 + "\t" + 3 + "\t" + 100 + "\t" + txt + "\n")
+      fw.flush()
       println(System.currentTimeMillis() - t)
     }
-
+    fw.close()
   }
 
 
