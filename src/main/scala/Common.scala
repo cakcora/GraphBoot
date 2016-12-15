@@ -16,7 +16,6 @@ object Common {
       neigh0 = d.flatMap(e => List(e.srcId, e.dstId)).distinct().collect()
       d = graph.edges.filter(e => neigh0.contains(e.dstId) || neigh0.contains(e.srcId))
     }
-    //    println(wave+" " +d.collect().mkString(" "))
     return d
   }
   def subgraphWithWave(initialGraph: Graph[Int, Int], wave: Int): Graph[Int, Int] = {
@@ -58,7 +57,7 @@ object Common {
     val collect: List[Double] = degrees.map(e => e._2.toDouble).toList
     val avgGraphDeg: Double = breeze.stats.mean(collect)
     val cexp = (mean * denom - avgGraphDeg * denom) / nom
-    val txt = (graph.numVertices + "\t" + graph.numEdges + "\t")+ mean + "\t" + avgGraphDeg + "\t" + breeze.stats.variance(patchDegrees)+ "\t"+ cexp
+    val txt = (graph.numVertices + "\t" + graph.numEdges + "\t") + mean + "\t" + avgGraphDeg + "\t" + breeze.stats.mean(intervalLengths) + "\t" + breeze.stats.variance(patchDegrees) + "\t" + cexp
     return txt
   }
 }
