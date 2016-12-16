@@ -13,7 +13,7 @@ object LMSI {
 
 
     var edgeList: ListBuffer[(Int, Int)] = edgeRDD.map(e => (e.srcId.toInt, e.dstId.toInt)).collect().to[ListBuffer]
-    //    println(edgeList.length)
+
     val disc: mutable.HashSet[Int] = new mutable.HashSet[Int]()
     val seenList: ListBuffer[Int] = new ListBuffer[Int]()
     seenList.append(seed)

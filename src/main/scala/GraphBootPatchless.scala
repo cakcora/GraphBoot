@@ -1,5 +1,6 @@
 import java.util.concurrent.ThreadLocalRandom
 
+import breeze.stats.DescriptiveStats
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
@@ -16,7 +17,7 @@ import scala.concurrent.{Await, Future}
 object GraphBootPatchless {
 
 
-  def graphBoot(sc: SparkContext, graph: Graph[Int, Int], degrees: Map[Int, Int], expOptions: Map[String, Int]): String = {
+  def graphBoot(sc: SparkContext, graph: Graph[Int, Int], degrees: Map[Int, Int], expOptions: Map[String, Int]): Map[String, AnyVal] = {
     val intervalLengths: ListBuffer[Double] = new ListBuffer[Double]()
     val seedCount = expOptions("seedCount")
     val wave = expOptions("wave")
@@ -45,7 +46,15 @@ object GraphBootPatchless {
     val collect: List[Double] = degrees.map(e => e._2.toDouble).toList
     val avgGraphDeg: Double = breeze.stats.mean(collect)
 
-    val txt = (graph.numVertices + "\t" + graph.numEdges + "\t") + M + "\t" + avgGraphDeg + "\t" + breeze.stats.variance(bstrapDegrees)
+    val dc = (i: Double) => {
+      DescriptiveStats.percentile(bstrapDegrees, i)
+    }
+    val l1: Double = dc(0.05)
+    val l2: Double = dc(0.95)
+
+    val txt = Map(("vertices", graph.numVertices), ("edges", graph.numEdges), ("mean", M), ("avgGraphDeg", avgGraphDeg), ("varianceOfBootStrapDegrees", breeze.stats.variance(bstrapDegrees)), ("l1", l1), ("l2", l2))
+
+
     return txt
 
   }
