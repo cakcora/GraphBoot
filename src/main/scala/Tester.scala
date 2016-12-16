@@ -16,17 +16,19 @@ object Tester {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
-    val grOptions = Map(("mu", 2.0), ("sigma", 1.3), ("vertices", 1000))
-    val expOptions: Map[String, Int] = Map(("seedCount", 10), ("bootCount", 50), ("wave", 2), ("bootSampleCount", 100), ("patchCount", 1))
-    val fw: FileWriter = new FileWriter("waveApp3.txt", true);
+    val grOptions = Map(("mu", 2.0), ("sigma", 1.3), ("vertices", 100))
+    val fw: FileWriter = new FileWriter("waveApp3.txt");
+    val header = "wave\tmu\tsigma\tvertices\tseedCount\tbootCount\tbootSamplePercentage\tnumVertices\tnumEdges\tmean\tavgGraphDeg\tvarianceOfBootStrapDegrees\n"
+    fw.write(header);
     for (u <- 1 to 5) {
       val gr: Graph[Int, Int] = SyntheticData.synthGraphGenerator(sc, "lognormal", grOptions)
       val graph = GraphCleaning.cleanGraph(sc, gr)
       val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
       for (wave <- 1 to 4) {
+        val expOptions: Map[String, Int] = Map(("seedCount", 10), ("bootCount", 50), ("wave", wave), ("bootSamplePercentage", 100), ("patchCount", 1))
         var t = System.currentTimeMillis()
         val txt = GraphBootPatchless.graphBoot(sc, graph, degrees, expOptions)
-        fw.write(wave + "\t" + expOptions("wave") + "\t" + grOptions("mu") + grOptions("sigma") + "\t" + grOptions("vertices") + "\t" + expOptions("seedCount") + "\t" + expOptions("bootCount") + "\t" + expOptions("patchCount") + "\t" + expOptions("bootSampleCount") + "\t" + txt + "\n")
+        fw.write(wave + "\t" + grOptions("mu") + "\t" + grOptions("sigma") + "\t" + grOptions("vertices") + "\t" + expOptions("seedCount") + "\t" + expOptions("bootCount") + "\t" + expOptions("bootSamplePercentage") + "\t" + txt + "\n")
         fw.flush()
       }
     }
