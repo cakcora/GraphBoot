@@ -4,11 +4,10 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
-
 /**
   * Created by cxa123230 on 11/15/2016.
   */
-object Tester {
+object SinglePatchDriver {
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
@@ -18,7 +17,7 @@ object Tester {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
-    val grOptions = Map(("mu", 1.3), ("sigma", 1.3), ("vertices", 1000))
+    val grOptions = Map(("mu", 2.0), ("sigma", 0.3), ("vertices", 1000))
     val fw: FileWriter = new FileWriter("waveApp3.txt");
     val header = "wave\tmu\tsigma\tvertices\tseedCount\tbootCount\tbootSamplePercentage\tnumVertices\tnumEdges\tmean\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\n"
     fw.write(header);
@@ -32,9 +31,11 @@ object Tester {
     var max = 0;
     //repeat N times
     val proxymap = scala.collection.mutable.HashMap[String, Int]().withDefaultValue(0)
+    val seeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
+    val muProxy: Double = proxyMu(graph, seeds, h)
+
     for (n <- 1 to N) {
-      val seeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
-      val muProxy: Double = proxyMu(graph, seeds, h)
+
       for (seed <- List(20, maxSeed)) {
         for (wave <- 1 to 4) {
           val expOptions: Map[String, Int] = Map(("bootCount", 50), ("wave", wave), ("bootSamplePercentage", 100), ("patchCount", 1))
@@ -44,7 +45,7 @@ object Tester {
           val l2: Double = txt("l2").asInstanceOf[Double]
           if (muProxy > l1 && muProxy < l2) {
             proxymap(seed + "_" + wave) += 1
-            println(seed + " " + wave + ":" + proxymap(seed + "_" + wave))
+            println(n + "\t" + seed + " " + wave + ":" + proxymap(seed + "_" + wave))
             if (proxymap(seed + "_" + wave) > max) {
               max = proxymap(seed + "_" + wave)
             }
@@ -68,6 +69,7 @@ object Tester {
     }
     val proxyVertices: Array[VertexId] = seeds.takeSample(false, h2).map(e => (e._1))
     val map: RDD[Int] = graph.collectNeighbors(EdgeDirection.Either).filter(e => proxyVertices.contains(e._1)).map(e => e._2.length)
-    return map.sum() / proxyVertices.length
+
+    return map.mean()
   }
 }
