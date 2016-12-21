@@ -1,10 +1,8 @@
-package drivers
-
 import java.io.FileWriter
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
-import org.apache.spark.graphx.{EdgeDirection, _}
+import org.apache.spark.graphx.{EdgeDirection, Graph, _}
 import org.apache.spark.sql.SparkSession
 
 /**

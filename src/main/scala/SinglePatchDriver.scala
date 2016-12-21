@@ -1,11 +1,10 @@
-package drivers
-
 import java.io.FileWriter
 
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.graphx._
+import org.apache.spark.graphx.{EdgeDirection, Graph, _}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
+
 /**
   * Created by cxa123230 on 11/15/2016.
   */
