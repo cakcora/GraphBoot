@@ -17,20 +17,18 @@ import scala.concurrent.{Await, Future}
 object GraphBootPatchless {
 
 
-  def graphBoot(sc: SparkContext, graph: Graph[Int, Int], degrees: Map[Int, Int], expOptions: Map[String, Int]): Map[String, AnyVal] = {
+  def graphBoot(sc: SparkContext, graph: Graph[Int, Int], degrees: Map[Int, Int], ss: Array[(VertexId, Int)], expOptions: Map[String, Int]): Map[String, AnyVal] = {
     val intervalLengths: ListBuffer[Double] = new ListBuffer[Double]()
-    val seedCount = expOptions("seedCount")
     val wave = expOptions("wave")
     val bootCount = expOptions("bootCount")
     val bootSamplePercentage = expOptions("bootSamplePercentage")
 
-    val seeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, seedCount)
-
     val weightedGraph: Graph[Int, Int] = Common.weightVertices(graph)
-    val lis = seeds.map(e => e._1.toInt).collect().toList
+    val seeds = sc.makeRDD(ss)
+    val seedList = seeds.map(e => e._1.toInt).collect().toList
     val initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
 
-    val fut: Future[List[List[Int]]] = Future.traverse(lis) { i =>
+    val fut: Future[List[List[Int]]] = Future.traverse(seedList) { i =>
       val localEdges: RDD[Edge[Int]] = Common.findWaveEdges(initialGraph, i, wave)
       Future {
         LMSI.singleSeed(localEdges, i, wave)
