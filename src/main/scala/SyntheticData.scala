@@ -1,5 +1,5 @@
 import org.apache.spark.SparkContext
-import org.apache.spark.graphx.util.GraphGenerators
+import org.apache.spark.graphx.util.{GraphGenerators, UpdatedGraphGenerators}
 import org.apache.spark.graphx.{Graph, GraphLoader, PartitionStrategy}
 import org.apache.spark.rdd.RDD
 
@@ -28,8 +28,8 @@ object SyntheticData {
         val mu = options("mu").asInstanceOf[Double]
         val sigma = options("sigma").asInstanceOf[Double]
         val vertices = options("vertices").asInstanceOf[Int]
-        val gr: Graph[Long, Int] = GraphGenerators.logNormalGraph(sc, vertices, 1, mu, sigma).removeSelfEdges()
-      GraphCleaning.cleanGraph(sc, gr.mapVertices((a, b) => a.toInt))
+        val gr: Graph[Long, Int] = UpdatedGraphGenerators.logNormalGraph(sc, vertices, 1, mu, sigma).removeSelfEdges()
+        GraphCleaning.cleanGraph(sc, gr.mapVertices((a, b) => a.toInt))
 
       }
       case "rmat" =>{

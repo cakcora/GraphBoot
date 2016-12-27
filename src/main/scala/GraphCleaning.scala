@@ -1,5 +1,5 @@
 import org.apache.spark.SparkContext
-import org.apache.spark.graphx.{Edge, Graph, VertexId}
+import org.apache.spark.graphx.{Graph, VertexId}
 import org.apache.spark.rdd.RDD
 
 /**
@@ -12,12 +12,7 @@ object GraphCleaning {
   2- Remove self edges
    */
   def cleanGraph(sc:SparkContext, graph:Graph[Int,Int]): Graph[Int, Int] ={
-    val j:Array[Edge[Int]] = graph.removeSelfEdges().edges.distinct().collect()
     val g: RDD[(VertexId, VertexId)] = graph.removeSelfEdges().edges.map(e => if (e.srcId > e.dstId) (e.dstId, e.srcId) else (e.srcId, e.dstId)).distinct()
     return Graph.fromEdgeTuples(g, defaultValue = 1)
   }
-
-
-
-
 }
