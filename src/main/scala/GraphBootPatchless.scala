@@ -7,9 +7,6 @@ import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
 
 /**
   * Created by cxa123230 on 11/3/2016.
@@ -29,21 +26,18 @@ object GraphBootPatchless {
     val initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
     var t = System.currentTimeMillis()
     val k: Graph[PartitionID, PartitionID] = Common.subgraphWithWave(graph, wave)
-    // val newLmsiList = LMSI.multipleSeeds(k, seedList, wave)
-    //println(System.currentTimeMillis()-t+" seconds passed in the new approach")
-    // t = System.currentTimeMillis()
-    //(println(newLmsiList))
-    val fut: Future[List[List[Int]]] = Future.traverse(seedList) { i =>
-      val localEdges: RDD[Edge[Int]] = Common.findWaveEdges(initialGraph, i, wave)
-      Future {
-        LMSI.singleSeed(localEdges, i, wave)
-      }
-    }
+    val newLmsiList = LMSI.multipleSeeds(k, seedList, wave)
+    //    val fut: Future[List[List[Int]]] = Future.traverse(seedList) { i =>
+    //      val localEdges: RDD[Edge[Int]] = Common.findWaveEdges(initialGraph, i, wave)
+    //      Future {
+    //        LMSI.singleSeed(localEdges, i, wave)
+    //      }
+    //    }
 
-    val lmsiList = Await.result(fut, Duration.Inf).flatten
+    //    val lmsiList = Await.result(fut, Duration.Inf).flatten
     //println(System.currentTimeMillis()-t+" seconds passed in the old approach")
     //(println(lmsiList))
-    val bstrapDegrees: List[Double] = boot(bootCount, bootSamplePercentage, lmsiList, degrees, seeds)
+    val bstrapDegrees: List[Double] = boot(bootCount, bootSamplePercentage, newLmsiList, degrees, seeds)
 
     val M: Double = breeze.stats.mean(bstrapDegrees)
 
@@ -58,7 +52,7 @@ object GraphBootPatchless {
     val l2: Double = dc(0.95)
     val lmax: Double = bstrapDegrees.max(Ordering.Double)
 
-    val txt = Map(("vertices", graph.numVertices), ("edges", graph.numEdges), ("mean", M), ("avgGraphDeg", avgGraphDeg), ("varianceOfBootStrapDegrees", breeze.stats.variance(bstrapDegrees)), ("l1", l1), ("l2", l2),
+    val txt: Map[String, AnyVal] = Map(("vertices", graph.numVertices), ("edges", graph.numEdges), ("mean", M), ("avgGraphDeg", avgGraphDeg), ("varianceOfBootStrapDegrees", breeze.stats.variance(bstrapDegrees)), ("l1", l1), ("l2", l2),
       ("lmin", lmin), ("lmax", lmax))
 
 

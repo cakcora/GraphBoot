@@ -17,7 +17,7 @@ object Tester {
     val sc = spark.sparkContext
 
 
-    val grOptions = Map(("mu", 2.0), ("sigma", 0.0), ("vertices", 1000))
+    val grOptions: Map[String, AnyVal] = Map(("mu", 2.0), ("sigma", 0.0), ("vertices", 1000))
     val graph: Graph[Int, Int] = SyntheticData.synthGraphGenerator(sc, "lognormal", grOptions)
     println(graph.numVertices + " " + graph.numEdges)
 

@@ -18,19 +18,18 @@ object SinglePatchDriver {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
-    val grOptions = Map(("mu", 2.0), ("sigma", 0.0), ("vertices", 1000))
-    val fw: FileWriter = new FileWriter("waveSingleSeed.txt");
+    val grOptions: Map[String, AnyVal] = Map(("mu", 2.0), ("sigma", 1.0), ("vertices", 2000))
+    val fw: FileWriter = new FileWriter("waveMultipleSeed2.txt");
     val header = "wave\tmu\tsigma\tvertices\tseedCount\tbootCount\tbootSamplePercentage\tnumVertices\tnumEdges\tmean\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
     fw.write(header);
     for (cv <- 1 to 50) {
       val gr: Graph[Int, Int] = SyntheticData.synthGraphGenerator(sc, "lognormal", grOptions)
       val graph = GraphCleaning.cleanGraph(sc, gr)
       val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
-      val N = 100
       val h = 30
       val maxSeed = 30
       var max = 0;
-      //repeat N times
+
       val proxymap = scala.collection.mutable.HashMap[String, Int]().withDefaultValue(0)
       val seeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
       val muProxy: Double = proxyMu(graph, seeds, h)
