@@ -1,5 +1,4 @@
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.graphx._
 import org.apache.spark.sql.SparkSession
 
 import scala.collection.mutable
@@ -20,43 +19,47 @@ object Tester {
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
 
-    val degrees: Map[Int, Int] = Map((1, 20), (2, 20), (3, 20), (4, 2), (5, 2), (6, 2), (7, 2))
+    val degrees: Map[Int, Int] = Map((1, 2), (2, 20), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2))
+    val candidateList: List[Int] = List(1, 3, 5)
+    val probMap: (mutable.LinkedHashMap[Int, Int], Int) = reverseProbMap(candidateList, degrees)
+    val probs: mutable.LinkedHashMap[Int, Int] = probMap._1
+    val inter: Int = probMap._2
 
-    val fgResult: (mutable.LinkedHashMap[Int, Int], Int) = fg(degrees)
-    val probs: mutable.LinkedHashMap[Int, Int] = fgResult._1
-    var inter: Int = fgResult._2
     val ms = mutable.Map.empty[Int, Int].withDefaultValue(0)
 
     val random = new Random()
     for (s <- 1 to 1000) {
       val pro = random.nextInt(inter)
-      var chosen: Int = -1
-
-      breakable {
-        for (i <- probs) {
-          if (pro <= i._2) {
-            chosen = i._1
-            ms(i._1) += 1
-            break
-          }
-
-        }
-      }
-
+      val picked = pickWithProb(probs, pro)
+      println(picked + " " + degrees(picked))
     }
     println(ms)
   }
 
-  private def fg(degrees: Map[PartitionID, PartitionID]) = {
-    val probs = mutable.LinkedHashMap.empty[PartitionID, PartitionID]
+  private def pickWithProb(probs: mutable.LinkedHashMap[Int, Int], pro: Int): Int = {
+    var pickedKey = -1
+    breakable {
+      for (i <- probs) {
+        if (pro <= i._2) {
+          pickedKey = i._1
+          break
+        }
+
+      }
+    }
+    pickedKey
+  }
+
+  private def reverseProbMap(candidateList: List[Int], degrees: Map[Int, Int]) = {
+    val probs = mutable.LinkedHashMap.empty[Int, Int]
     var sum: Double = degrees.map(e => e._2).sum
     var inter = 0
-    for (v <- degrees) {
-      val j = (10000 * (sum / v._2)).toInt
-      if (v._2 != 0 && j < 1) {
+    for (v <- candidateList) {
+      val j = (10000 * (sum / degrees(v))).toInt
+      if (degrees(v) != 0 && j < 1) {
         println("wrong")
       }
-      probs.put(v._1, inter + j)
+      probs.put(v, inter + j)
       inter += j
     }
     (probs, inter)

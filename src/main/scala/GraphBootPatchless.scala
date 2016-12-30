@@ -122,13 +122,14 @@ object GraphBootPatchless {
     var sum: Double = degrees.map(e => e._2).sum
     var inter = 0
     for (v <- candidateList) {
-      val j = (10000 * (sum / degrees(v))).toInt
+      val j = (1000 * (1.0 / degrees(v))).toInt
       if (degrees(v) != 0 && j < 1) {
         println("wrong")
       }
       probs.put(v, inter + j)
       inter += j
     }
+    if (inter <= 0) throw new IllegalArgumentException("overflow in prob map computations")
     (probs, inter)
   }
 
