@@ -7,6 +7,7 @@ import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.util.control.Breaks._
 
 /**
   * Created by cxa123230 on 11/3/2016.
@@ -63,10 +64,14 @@ object GraphBootPatchless {
 
   def boot(bootCount: Int, bootSamplePercentage: Int, candidateList: List[Int], degrees: Map[Int, Int], seeds: RDD[(VertexId, Int)]): List[Double] = {
     val bstrapDegrees: ListBuffer[Double] = new ListBuffer[Double]()
+
     val seedList: List[Int] = seeds.map(e => e._1.toInt).collect().toList
-    val proxySampleSize = (candidateList.size * bootSamplePercentage / 100.0).toInt
     val nSeedLength: Int = candidateList.length
     val seedLength: Int = seedList.length
+    val probMap: (mutable.LinkedHashMap[Int, Int], Int) = reverseProbMap(candidateList, degrees)
+    val probs: mutable.LinkedHashMap[Int, Int] = probMap._1
+    val inter: Int = probMap._2
+
     for (i <- 1 to bootCount) {
       val kSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
       val kNonSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
@@ -78,7 +83,8 @@ object GraphBootPatchless {
 
       }
       for (j <- 1 to nSeedLength) {
-        val chosenNseed: Int = candidateList(random.nextInt(nSeedLength))
+        //        val chosenNSeed: Int = seedList(random2.nextInt(seedLength))// uniform probability sampling
+        val chosenNseed: Int = pickWithProb(probs, random.nextInt(inter)) // inverse degree probability sampling
         kNonSeedMap(degrees(chosenNseed)) += 1
       }
 
@@ -95,6 +101,35 @@ object GraphBootPatchless {
       bstrapDegrees += avgDegree
     }
     bstrapDegrees.toList
+  }
+
+  private def pickWithProb(probs: mutable.LinkedHashMap[Int, Int], pro: Int): Int = {
+    var pickedKey = -1
+    breakable {
+      for (i <- probs) {
+        if (pro <= i._2) {
+          pickedKey = i._1
+          break
+        }
+      }
+    }
+    pickedKey
+  }
+
+
+  private def reverseProbMap(candidateList: List[Int], degrees: Map[Int, Int]) = {
+    val probs = mutable.LinkedHashMap.empty[Int, Int]
+    var sum: Double = degrees.map(e => e._2).sum
+    var inter = 0
+    for (v <- candidateList) {
+      val j = (10000 * (sum / degrees(v))).toInt
+      if (degrees(v) != 0 && j < 1) {
+        println("wrong")
+      }
+      probs.put(v, inter + j)
+      inter += j
+    }
+    (probs, inter)
   }
 
 }
