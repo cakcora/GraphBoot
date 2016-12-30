@@ -72,10 +72,13 @@ object GraphBootPatchless {
       val kNonSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
       val random: ThreadLocalRandom = ThreadLocalRandom.current()
       val random2: ThreadLocalRandom = ThreadLocalRandom.current()
-      for (j <- 1 to proxySampleSize) {
-        val chosenNseed: Int = candidateList(random.nextInt(nSeedLength))
+      for (j <- 1 to seedLength) {
         val chosenSeed: Int = seedList(random2.nextInt(seedLength))
         kSeedMap(degrees(chosenSeed)) += 1
+
+      }
+      for (j <- 1 to nSeedLength) {
+        val chosenNseed: Int = candidateList(random.nextInt(nSeedLength))
         kNonSeedMap(degrees(chosenNseed)) += 1
       }
 
