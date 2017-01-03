@@ -8,7 +8,7 @@ import org.apache.spark.sql.SparkSession
 /**
   * Created by cxa123230 on 11/15/2016.
   */
-object SinglePatchDriver {
+object UnifiedExperimentDriver {
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
@@ -18,7 +18,7 @@ object SinglePatchDriver {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
-    val fw: FileWriter = new FileWriter("exp1.txt");
+    val fw: FileWriter = new FileWriter("exp4.txt");
     val header = "wave\tmu\tsigma\tvertices\tseedCount\tbootCount\tbootSamplePercentage\tnumVertices\tnumEdges\tmean\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
     fw.write(header);
     for (cv <- 1 to 50) {

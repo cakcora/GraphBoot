@@ -7,6 +7,9 @@ import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 import scala.util.control.Breaks._
 
 /**
@@ -27,18 +30,16 @@ object GraphBootPatchless {
     val initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
     var t = System.currentTimeMillis()
     val k: Graph[PartitionID, PartitionID] = Common.subgraphWithWave(graph, wave)
-    val newLmsiList = LMSI.multipleSeeds(k, seedList, wave)
-    //    val fut: Future[List[List[Int]]] = Future.traverse(seedList) { i =>
-    //      val localEdges: RDD[Edge[Int]] = Common.findWaveEdges(initialGraph, i, wave)
-    //      Future {
-    //        LMSI.singleSeed(localEdges, i, wave)
-    //      }
-    //    }
+    //val newLmsiList = LMSI.multipleSeeds(k, seedList, wave)
+    val fut: Future[List[List[Int]]] = Future.traverse(seedList) { i =>
+      val localEdges: RDD[Edge[Int]] = Common.findWaveEdges(initialGraph, i, wave)
+      Future {
+        LMSI.singleSeed(localEdges, i, wave)
+      }
+    }
 
-    //    val lmsiList = Await.result(fut, Duration.Inf).flatten
-    //println(System.currentTimeMillis()-t+" seconds passed in the old approach")
-    //(println(lmsiList))
-    val bstrapDegrees: List[Double] = boot(bootCount, bootSamplePercentage, newLmsiList, degrees, seeds)
+    val lmsiList = Await.result(fut, Duration.Inf).flatten
+    val bstrapDegrees: List[Double] = boot(bootCount, bootSamplePercentage, lmsiList, degrees, seeds)
 
     val M: Double = breeze.stats.mean(bstrapDegrees)
 
