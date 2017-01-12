@@ -33,7 +33,6 @@ object DetachedExperimentDriver {
         val h = 30
         val maxSeed = 30
 
-        val proxymap = scala.collection.mutable.HashMap[String, Int]().withDefaultValue(0)
         val seeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
         val muProxy: Double = proxyMu(graph, seeds, h)
           val seed = 20

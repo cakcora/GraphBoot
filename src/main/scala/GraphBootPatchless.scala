@@ -21,14 +21,14 @@ object GraphBootPatchless {
     val bootCount = expOptions("bootCount")
     val bootSamplePercentage = expOptions("bootSamplePercentage")
 
-    val weightedGraph: Graph[Int, Int] = Common.weightVertices(graph)
+
     val seeds: RDD[(Long, Int)] = sc.makeRDD(seedArray)
 
     var lmsiList = if (method == "par") {
       LMSI.parallelLMSI(graph, seeds, wave)
     }
     else if (method == "seq")
-      LMSI.sequentialLMSI(sc, weightedGraph, seedArray, wave)
+      LMSI.sequentialLMSI(sc, graph, seedArray, wave)
 
     else {
       throw new IllegalArgumentException("method selection is wrong with " + method)

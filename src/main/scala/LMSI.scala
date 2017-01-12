@@ -1,104 +1,93 @@
+import org.apache.spark.SparkContext
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 /**
   * Created by cxa123230 on 11/25/2016.
   */
 object LMSI {
-  def multipleSeeds(k: Graph[PartitionID, PartitionID], seedList: List[PartitionID], wave: PartitionID): List[Int] = {
+  def parallelLMSI(graph: Graph[Int, Int], seeds: RDD[(Long, Int)], wave: Int): List[Int] = {
 
+    val weightedGraph: Graph[PartitionID, PartitionID] = Common.weightVertices(graph)
+    val initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
+    val k: Graph[PartitionID, PartitionID] = Common.subgraphWithWave(initialGraph, wave)
+    val seedList = seeds.map(e => e._1.toInt).collect().toList
+    val edges: ListBuffer[(PartitionID, PartitionID)] = k.edges.map(e => (e.srcId.toInt, e.dstId.toInt)).collect().to[ListBuffer]
 
-    var edgeList: ListBuffer[(Int, Int)] = k.edges.map(e => (e.srcId.toInt, e.dstId.toInt)).collect().to[ListBuffer]
-
-    val disc: mutable.HashSet[Int] = new mutable.HashSet[Int]()
-    val seenList: ListBuffer[Int] = new ListBuffer[Int]()
+    val seenVertices: mutable.HashSet[PartitionID] = new mutable.HashSet[PartitionID]()
+    val initialVertexList: ListBuffer[PartitionID] = new ListBuffer[PartitionID]()
     for (seed <- seedList) {
-      seenList.append(seed)
-      disc.add(seed)
+      initialVertexList.append(seed)
+      seenVertices.add(seed)
     }
+    val outputList = lmsiAlgorithm(wave, edges, seenVertices, initialVertexList)
+    outputList
+  }
+
+  def lmsiAlgorithm(wave: PartitionID, remainingEdges: ListBuffer[(PartitionID, PartitionID)], seenVertices: mutable.HashSet[PartitionID], outputVertexList: ListBuffer[PartitionID]): List[Int] = {
     var w = 0;
-    while (!edgeList.isEmpty && w < wave) {
-      val phase: mutable.HashSet[Int] = new mutable.HashSet[Int]()
+    while (!remainingEdges.isEmpty && w < wave) {
+      val phase: mutable.HashSet[PartitionID] = new mutable.HashSet[PartitionID]()
       w += 1
-      val seenSet: mutable.HashSet[Int] = new mutable.HashSet[Int]()
-      var rList: mutable.Set[(Int, Int)] = new mutable.HashSet[(Int, Int)]()
-      for ((a, b) <- edgeList) {
+      var rList: mutable.Set[(PartitionID, PartitionID)] = new mutable.HashSet[(PartitionID, PartitionID)]()
+      for ((a, b) <- remainingEdges) {
         var f = false
-        if (disc.contains(a)) {
+        if (seenVertices.contains(a)) {
           f = true
-          if (disc.contains(b)) {
-            seenList.append(b)
-            seenList.append(a)
+          if (seenVertices.contains(b)) {
+            outputVertexList.append(b)
+            outputVertexList.append(a)
           }
           else {
+            outputVertexList.append(b)
             phase.add(b)
-            seenSet.add(b)
           }
         }
-        else if (disc.contains(b)) {
+        else if (seenVertices.contains(b)) {
           f = true
+          outputVertexList.append(a)
           phase.add(a)
-          seenSet.add(a)
         }
         if (f) {
           rList.add((a, b))
         }
       }
-      seenList ++= seenSet
-      disc ++= phase
-      edgeList --= rList
+      seenVertices ++= phase
+      remainingEdges --= rList
     }
-    seenList.toList
+    outputVertexList.toList
   }
 
-
-
-  def singleSeed(edgeRDD: RDD[Edge[PartitionID]], seed: Int, wave: Int): List[Int] = {
-
-
-    var edgeList: ListBuffer[(Int, Int)] = edgeRDD.map(e => (e.srcId.toInt, e.dstId.toInt)).collect().to[ListBuffer]
-
-    val disc: mutable.HashSet[Int] = new mutable.HashSet[Int]()
-    val seenList: ListBuffer[Int] = new ListBuffer[Int]()
-    seenList.append(seed)
-    disc.add(seed)
-    var w = 0;
-    while (!edgeList.isEmpty && w < wave) {
-      val phase: mutable.HashSet[Int] = new mutable.HashSet[Int]()
-      w += 1
-      val seenSet: mutable.HashSet[Int] = new mutable.HashSet[Int]()
-      var rList: mutable.Set[(Int, Int)] = new mutable.HashSet[(Int, Int)]()
-      for ((a, b) <- edgeList) {
-        var f = false
-        if (disc.contains(a)) {
-          f = true
-          if (disc.contains(b)) {
-            seenList.append(b)
-            seenList.append(a)
-          }
-          else {
-            phase.add(b)
-            seenSet.add(b)
-          }
-        }
-        else if (disc.contains(b)) {
-          f = true
-          phase.add(a)
-          seenSet.add(a)
-        }
-        if (f) {
-          rList.add((a, b))
-        }
+  def sequentialLMSI(sc: SparkContext, graph: Graph[Int, Int], seedArray: Array[(VertexId, Int)], wave: Int): List[Int] = {
+    val seeds = sc.makeRDD(seedArray)
+    val seedList = seeds.map(e => e._1.toInt).collect().toList
+    val weightedGraph: Graph[Int, Int] = Common.weightVertices(graph)
+    val initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
+    val fut: Future[List[List[Int]]] = Future.traverse(seedList) { i =>
+      val localEdges: RDD[Edge[Int]] = Common.findWaveEdges(initialGraph, i, wave)
+      Future {
+        LMSI.singleSeed(localEdges, i, wave)
       }
-      seenList ++=seenSet
-      disc ++= phase
-      edgeList --= rList
     }
-    seenList.toList
+    Await.result(fut, Duration.Inf).flatten
   }
 
+  def singleSeed(edgeRDD: RDD[Edge[Int]], seed: Int, wave: Int): List[Int] = {
 
+    val edges: ListBuffer[(Int, Int)] = edgeRDD.map(e => (e.srcId.toInt, e.dstId.toInt)).collect().to[ListBuffer]
+
+    val seenVertices: mutable.HashSet[Int] = new mutable.HashSet[Int]()
+    val initialVertexList: ListBuffer[Int] = new ListBuffer[Int]()
+    initialVertexList.append(seed)
+    seenVertices.add(seed)
+
+    val outputList = lmsiAlgorithm(wave, edges, seenVertices, initialVertexList)
+    outputList
+  }
 }
