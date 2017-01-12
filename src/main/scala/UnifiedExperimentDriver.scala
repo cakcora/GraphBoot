@@ -21,6 +21,7 @@ object UnifiedExperimentDriver {
     val fw: FileWriter = new FileWriter("exp4.txt");
     val header = "wave\tmu\tsigma\tvertices\tseedCount\tbootCount\tbootSamplePercentage\tnumVertices\tnumEdges\tmean\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
     fw.write(header);
+    val method = "par"
     for (cv <- 1 to 50) {
       println(" iter " + cv)
       for (sigma <- List(0.0, 0.2, 0.4, 0.8, 1.2, 1.4)) {
@@ -40,7 +41,7 @@ object UnifiedExperimentDriver {
         for (seed <- List(2, 5, 10, 20, maxSeed)) {
           for (wave <- 1 to 6) {
             val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave), ("bootSamplePercentage", 100), ("patchCount", 1))
-            val txt = GraphBootPatchless.graphBoot(sc, graph, degrees, seeds.take(seed), expOptions)
+            val txt = GraphBootPatchless.graphBoot(sc, graph, degrees, seeds.take(seed), expOptions, method)
             val l1: Double = txt("l1").asInstanceOf[Double]
             val l2: Double = txt("l2").asInstanceOf[Double]
             if (muProxy > l1 && muProxy < l2) {

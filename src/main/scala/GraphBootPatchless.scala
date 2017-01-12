@@ -15,28 +15,25 @@ import scala.util.control.Breaks._
 object GraphBootPatchless {
 
 
-  def graphBoot(sc: SparkContext, graph: Graph[Int, Int], degrees: Map[Int, Int], seedArray: Array[(VertexId, Int)], expOptions: Map[String, Int]): Map[String, AnyVal] = {
+  def graphBoot(sc: SparkContext, graph: Graph[Int, Int], degrees: Map[Int, Int], seedArray: Array[(VertexId, Int)], expOptions: Map[String, Int], method: String): Map[String, AnyVal] = {
     val intervalLengths: ListBuffer[Double] = new ListBuffer[Double]()
     val wave = expOptions("wave")
     val bootCount = expOptions("bootCount")
     val bootSamplePercentage = expOptions("bootSamplePercentage")
 
     val weightedGraph: Graph[Int, Int] = Common.weightVertices(graph)
-    val seeds = sc.makeRDD(seedArray)
-    val seedList = seeds.map(e => e._1.toInt).collect().toList
-    val initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
-    var t = System.currentTimeMillis()
-    val k: Graph[PartitionID, PartitionID] = Common.subgraphWithWave(graph, wave)
-    val newLmsiList = LMSI.multipleSeeds(k, seedList, wave)
-    //    val fut: Future[List[List[Int]]] = Future.traverse(seedList) { i =>
-    //      val localEdges: RDD[Edge[Int]] = Common.findWaveEdges(initialGraph, i, wave)
-    //      Future {
-    //        LMSI.singleSeed(localEdges, i, wave)
-    //      }
-    //    }
-    //
-    //    val lmsiList = Await.result(fut, Duration.Inf).flatten
-    val bstrapDegrees: List[Double] = boot(bootCount, bootSamplePercentage, newLmsiList, degrees, seeds)
+    val seeds: RDD[(Long, Int)] = sc.makeRDD(seedArray)
+
+    var lmsiList = if (method == "par") {
+      LMSI.parallelLMSI(graph, seeds, wave)
+    }
+    else if (method == "seq")
+      LMSI.sequentialLMSI(sc, weightedGraph, seedArray, wave)
+
+    else {
+      throw new IllegalArgumentException("method selection is wrong with " + method)
+    }
+    val bstrapDegrees: List[Double] = boot(bootCount, bootSamplePercentage, lmsiList, degrees, seeds)
 
     val M: Double = breeze.stats.mean(bstrapDegrees)
 

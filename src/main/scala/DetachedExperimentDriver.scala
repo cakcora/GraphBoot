@@ -45,7 +45,7 @@ object DetachedExperimentDriver {
 
             {
             val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave), ("bootSamplePercentage", 100), ("patchCount", 1))
-            val txt = GraphBootPatchless.graphBoot(sc, graph, degrees, seeds.take(seed), expOptions)
+              val txt = GraphBootPatchless.graphBoot(sc, graph, degrees, seeds.take(seed), expOptions, "par")
 
             fw.write(wave + "\t" + grOptions("mu") + "\t" + grOptions("sigma") + "\t" + grOptions("vertices") + "\t" + seed + "\t" + expOptions("bootCount") + "\t" + expOptions("bootSamplePercentage") + "\t" + txt("vertices") + "\t" + txt("edges") + "\t" + txt("mean") + "\t" + txt("avgGraphDeg") + "\t" + txt("varianceOfBootStrapDegrees") + "\t" + txt("l1") + "\t" + muProxy + "\t" + txt("l2") + "\t" + txt("lmin") + "\t" + txt("lmax") + "\n")
             fw.flush()
