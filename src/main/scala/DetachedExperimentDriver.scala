@@ -22,37 +22,33 @@ object DetachedExperimentDriver {
     val header = "wave\tmu\tsigma\tvertices\tseedCount\tbootCount\tbootSamplePercentage\tnumVertices\tnumEdges\tmean\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
     fw.write(header);
 
-
+    val wave = 2
     for (cv <- 1 to 50) {
       println(" iter " + cv)
       for (sigma <- List(0.0, 0.2, 0.4, 0.8, 1.2, 1.4)) {
         for (mu <- List(1.0, 2.0, 4.0, 6.0)) {
           val grOptions: Map[String, AnyVal] = Map(("mu", mu), ("sigma", sigma), ("vertices", 10000))
           val graph: Graph[Int, Int] = SyntheticData.synthGraphGenerator(sc, "lognormal", grOptions)
-        val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
-        val h = 30
-        val maxSeed = 30
+          val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
+          val h = 30
+          val maxSeed = 30
 
-        val seeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
-        val muProxy: Double = proxyMu(graph, seeds, h)
+          val seeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
+          val muProxy: Double = proxyMu(graph, seeds, h)
           val seed = 20
           //for (seed <- List(2, 5, 10, 20, maxSeed))
 
-          {
-            val wave = 2
-            //for (wave <- 1 to 6)
 
-            {
-            val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave), ("bootSamplePercentage", 100), ("patchCount", 1))
-              val txt = GraphBootPatchless.graphBoot(sc, graph, degrees, seeds.take(seed), expOptions, "par")
+          val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave), ("bootSamplePercentage", 100), ("patchCount", 1))
+          val txt = GraphBootPatchless.graphBoot(sc, graph, degrees, seeds.take(seed), expOptions, "par")
 
-            fw.write(wave + "\t" + grOptions("mu") + "\t" + grOptions("sigma") + "\t" + grOptions("vertices") + "\t" + seed + "\t" + expOptions("bootCount") + "\t" + expOptions("bootSamplePercentage") + "\t" + txt("vertices") + "\t" + txt("edges") + "\t" + txt("mean") + "\t" + txt("avgGraphDeg") + "\t" + txt("varianceOfBootStrapDegrees") + "\t" + txt("l1") + "\t" + muProxy + "\t" + txt("l2") + "\t" + txt("lmin") + "\t" + txt("lmax") + "\n")
-            fw.flush()
-          }
+          fw.write(wave + "\t" + grOptions("mu") + "\t" + grOptions("sigma") + "\t" + grOptions("vertices") + "\t" + seed + "\t" + expOptions("bootCount") + "\t" + expOptions("bootSamplePercentage") + "\t" + txt("vertices") + "\t" + txt("edges") + "\t" + txt("mean") + "\t" + txt("avgGraphDeg") + "\t" + txt("varianceOfBootStrapDegrees") + "\t" + txt("l1") + "\t" + muProxy + "\t" + txt("l2") + "\t" + txt("lmin") + "\t" + txt("lmax") + "\n")
+          fw.flush()
+
         }
-        }
-
       }
+
+
     }
     fw.close()
   }

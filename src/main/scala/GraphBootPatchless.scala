@@ -29,7 +29,8 @@ object GraphBootPatchless {
     }
     else if (method == "seq")
       LMSI.sequentialLMSI(sc, graph, seedArray, wave)
-
+    else if (method == "parSpark")
+      LMSI.parallelLMSISparkified(graph, seeds, wave)
     else {
       throw new IllegalArgumentException("method selection is wrong with " + method)
     }

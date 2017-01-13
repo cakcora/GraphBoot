@@ -15,4 +15,5 @@ object GraphCleaning {
     val g: RDD[(VertexId, VertexId)] = graph.removeSelfEdges().edges.map(e => if (e.srcId > e.dstId) (e.dstId, e.srcId) else (e.srcId, e.dstId)).distinct()
     return Graph.fromEdgeTuples(g, defaultValue = 1)
   }
+
 }
