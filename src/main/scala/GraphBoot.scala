@@ -1,5 +1,3 @@
-import java.util.concurrent.ThreadLocalRandom
-
 import breeze.stats.DescriptiveStats
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx._
@@ -12,19 +10,15 @@ import scala.util.control.Breaks._
 /**
   * Created by cxa123230 on 11/3/2016.
   */
-object GraphBootPatchless {
+object GraphBoot {
 
 
-  def graphBoot(sc: SparkContext, graph: Graph[Int, Int], degrees: Map[Int, Int], seedArray: Array[(VertexId, Int)], expOptions: Map[String, Int], method: String): Map[String, AnyVal] = {
-    val intervalLengths: ListBuffer[Double] = new ListBuffer[Double]()
+  def compute(sc: SparkContext, graph: Graph[Int, Int], degrees: Map[Int, Int], seedArray: Array[(VertexId, Int)], expOptions: Map[String, Int], method: String): Map[String, AnyVal] = {
     val wave = expOptions("wave")
     val bootCount = expOptions("bootCount")
-    val bootSamplePercentage = expOptions("bootSamplePercentage")
-
-
     val seeds: RDD[(Long, Int)] = sc.makeRDD(seedArray)
 
-    var lmsiList = if (method == "parFutures") {
+    var lmsiList = if (method == "parScala") {
       LMSI.parallelLMSI(graph, seeds, wave)
     }
     else if (method == "seq")
@@ -34,7 +28,7 @@ object GraphBootPatchless {
     else {
       throw new IllegalArgumentException("method selection is wrong with " + method)
     }
-    val bstrapDegrees: List[Double] = boot(bootCount, bootSamplePercentage, lmsiList, degrees, seeds)
+    val bstrapDegrees: List[Double] = boot(bootCount, lmsiList, degrees, seeds)
 
     val M: Double = breeze.stats.mean(bstrapDegrees)
 
@@ -58,7 +52,7 @@ object GraphBootPatchless {
   }
 
 
-  def boot(bootCount: Int, bootSamplePercentage: Int, candidateList: List[Int], degrees: Map[Int, Int], seeds: RDD[(VertexId, Int)]): List[Double] = {
+  def boot(bootCount: Int, candidateList: List[Int], degrees: Map[Int, Int], seeds: RDD[(VertexId, Int)]): List[Double] = {
     val bstrapDegrees: ListBuffer[Double] = new ListBuffer[Double]()
 
     val seedList: List[Int] = seeds.map(e => e._1.toInt).collect().toList
@@ -66,40 +60,40 @@ object GraphBootPatchless {
     val seedLength: Int = seedList.length
     val probMap: (mutable.LinkedHashMap[Int, Int], Int) = reverseProbMap(candidateList, degrees)
     val probs: mutable.LinkedHashMap[Int, Int] = probMap._1
+
     val inter: Int = probMap._2
 
     for (i <- 1 to bootCount) {
       val kSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
-      val kNonSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
-      val random: ThreadLocalRandom = ThreadLocalRandom.current()
-      val random2: ThreadLocalRandom = ThreadLocalRandom.current()
+
+      val random = scala.util.Random
       for (j <- 1 to seedLength) {
-        val chosenSeed: Int = seedList(random2.nextInt(seedLength))
+        val chosenSeed: Int = seedList(random.nextInt(seedLength))
         kSeedMap(degrees(chosenSeed)) += 1
 
       }
+      val kNonSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
       for (j <- 1 to nSeedLength) {
-        //        val chosenNSeed: Int = seedList(random2.nextInt(seedLength))// uniform probability sampling
         val chosenNseed: Int = pickWithProb(probs, random.nextInt(inter)) // inverse degree probability sampling
         kNonSeedMap(degrees(chosenNseed)) += 1
       }
 
-      val numSeeds = kSeedMap.map(e => e._2.toInt).sum
-      val numNonSeeds = kNonSeedMap.map(e => e._2.toInt).sum
       var avgDegree = 0.0
       var p0 = 0;
-      if (numSeeds != 0) p0 = kSeedMap(0) / numSeeds
+      if (kSeedMap(0) != 0) p0 = kSeedMap(0) / seedLength
+
       for (i <- (kSeedMap.keySet ++ kNonSeedMap.keySet)) {
         val i1: Double = kSeedMap(i) + Math.abs(1 - p0) * kNonSeedMap(i)
-        avgDegree += i * i1 / ((numSeeds + numNonSeeds))
+        avgDegree += i * i1 / (seedLength + nSeedLength)
       }
       //add avg degree from this bootstrap
       bstrapDegrees += avgDegree
+      println(avgDegree + "" + kNonSeedMap)
     }
     bstrapDegrees.toList
   }
 
-  private def pickWithProb(probs: mutable.LinkedHashMap[Int, Int], pro: Int): Int = {
+  def pickWithProb(probs: mutable.LinkedHashMap[Int, Int], pro: Int): Int = {
     var pickedKey = -1
     breakable {
       for (i <- probs) {
@@ -113,14 +107,14 @@ object GraphBootPatchless {
   }
 
 
-  private def reverseProbMap(candidateList: List[Int], degrees: Map[Int, Int]) = {
+  def reverseProbMap(candidateList: List[Int], degrees: Map[Int, Int]) = {
     val probs = mutable.LinkedHashMap.empty[Int, Int]
     var sum: Double = degrees.map(e => e._2).sum
     var inter = 0
     for (v <- candidateList) {
       val j = (1000 * (1.0 / degrees(v))).toInt
       if (degrees(v) != 0 && j < 1) {
-        //        println("wrong")
+        println("illegal state")
       }
       probs.put(v, inter + j)
       inter += j

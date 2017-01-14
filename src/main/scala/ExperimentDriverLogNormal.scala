@@ -8,7 +8,7 @@ import org.apache.spark.sql.SparkSession
 /**
   * Created by cxa123230 on 11/15/2016.
   */
-object DetachedExperimentDriver {
+object ExperimentDriverLogNormal {
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
@@ -30,19 +30,16 @@ object DetachedExperimentDriver {
           val grOptions: Map[String, AnyVal] = Map(("mu", mu), ("sigma", sigma), ("vertices", 10000))
           val graph: Graph[Int, Int] = SyntheticData.synthGraphGenerator(sc, "lognormal", grOptions)
           val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
-          val h = 30
+          val seedCount = 20
           val maxSeed = 30
-
-          val seeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
-          val muProxy: Double = proxyMu(graph, seeds, h)
-          val seed = 20
-          //for (seed <- List(2, 5, 10, 20, maxSeed))
-
+          val allSeeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
+          val seedSet: Array[(VertexId, Int)] = allSeeds.take(seedCount)
+          val muProxy: Double = Common.proxyMu(seedSet.map(e => e._1.toInt), degrees)
 
           val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave), ("bootSamplePercentage", 100), ("patchCount", 1))
-          val txt = GraphBootPatchless.graphBoot(sc, graph, degrees, seeds.take(seed), expOptions, "parSpark")
+          val txt = GraphBoot.compute(sc, graph, degrees, seedSet, expOptions, "parSpark")
 
-          fw.write(wave + "\t" + grOptions("mu") + "\t" + grOptions("sigma") + "\t" + grOptions("vertices") + "\t" + seed + "\t" + expOptions("bootCount") + "\t" + expOptions("bootSamplePercentage") + "\t" + txt("vertices") + "\t" + txt("edges") + "\t" + txt("mean") + "\t" + txt("avgGraphDeg") + "\t" + txt("varianceOfBootStrapDegrees") + "\t" + txt("l1") + "\t" + muProxy + "\t" + txt("l2") + "\t" + txt("lmin") + "\t" + txt("lmax") + "\n")
+          fw.write(wave + "\t" + grOptions("mu") + "\t" + grOptions("sigma") + "\t" + grOptions("vertices") + "\t" + seedCount + "\t" + expOptions("bootCount") + "\t" + expOptions("bootSamplePercentage") + "\t" + txt("vertices") + "\t" + txt("edges") + "\t" + txt("mean") + "\t" + txt("avgGraphDeg") + "\t" + txt("varianceOfBootStrapDegrees") + "\t" + txt("l1") + "\t" + muProxy + "\t" + txt("l2") + "\t" + txt("lmin") + "\t" + txt("lmax") + "\n")
           fw.flush()
 
         }

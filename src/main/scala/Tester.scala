@@ -1,6 +1,4 @@
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.graphx.{Graph, _}
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
 /**
@@ -16,19 +14,14 @@ object Tester {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
+    val df = proxyMu(Array(1, 5, 3), Map((1, 1), (2, 2), (5, 100)))
+    println(df)
 
-    var graph: Graph[Int, Int] = SyntheticData.synthGraphGenerator(sc, "dblp", Map.empty)
-    val seeds: RDD[(VertexId, Int)] = sc.makeRDD(graph.vertices.takeSample(false, 5).map(e => (e._1, 0)))
-    println(seeds.collect().toList)
-
-    val wave = 2
-    graph = GraphCleaning.cleanGraph(sc, graph)
-
-    val l1 = LMSI.parallelLMSISparkified(graph, seeds, wave)
-
-    val l2 = LMSI.parallelLMSI(graph, seeds, wave)
-
-    println(l1.diff(l2).size)
   }
 
+  def proxyMu(seeds: Array[(Int)], degreeMap: Map[Int, Int]): Any = {
+
+    val degreeList: Vector[Double] = degreeMap.filter(e => seeds.contains(e._1)).map(e => e._2.toDouble).toVector
+    return breeze.stats.meanAndVariance(degreeList)
+  }
 }
