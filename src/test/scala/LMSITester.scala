@@ -24,6 +24,10 @@ object LMSITester {
     assert(l1.diff(List(1L, 2L)).length == 0)
     assert(l1.diff(l3).length == 0)
 
+    val l5 = LMSI.sequentialLMSI(sc, graph, Array((1L, 0), (2L, 0)), 2)
+    val l7 = LMSI.parallelLMSI(graph, sc.makeRDD(Array((1L, 0), (2L, 0))), 2)
 
+    assert(l5.diff(List(1, 1, 2, 2, 3, 3, 3, 4, 4, 6, 6, 6, 6, 7, 7)).length == 0)
+    assert(l7.diff(List(1, 2, 3, 3, 3, 4, 4, 6, 6, 6, 7)).length == 0)
   }
 }
