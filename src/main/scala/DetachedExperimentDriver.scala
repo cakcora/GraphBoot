@@ -25,8 +25,8 @@ object DetachedExperimentDriver {
     val wave = 2
     for (cv <- 1 to 50) {
       println(" iter " + cv)
-      for (sigma <- List(0.0, 0.2, 0.4, 0.8, 1.2, 1.4)) {
-        for (mu <- List(1.0, 2.0, 4.0, 6.0)) {
+      for (sigma <- (0 to 20 by 1).map(e => Math.round(e * 10.0) / 100.0)) {
+        for (mu <- (10 to 50 by 1).map(e => Math.round(e * 10.0) / 100.0)) {
           val grOptions: Map[String, AnyVal] = Map(("mu", mu), ("sigma", sigma), ("vertices", 10000))
           val graph: Graph[Int, Int] = SyntheticData.synthGraphGenerator(sc, "lognormal", grOptions)
           val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
@@ -40,7 +40,7 @@ object DetachedExperimentDriver {
 
 
           val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave), ("bootSamplePercentage", 100), ("patchCount", 1))
-          val txt = GraphBootPatchless.graphBoot(sc, graph, degrees, seeds.take(seed), expOptions, "par")
+          val txt = GraphBootPatchless.graphBoot(sc, graph, degrees, seeds.take(seed), expOptions, "parSpark")
 
           fw.write(wave + "\t" + grOptions("mu") + "\t" + grOptions("sigma") + "\t" + grOptions("vertices") + "\t" + seed + "\t" + expOptions("bootCount") + "\t" + expOptions("bootSamplePercentage") + "\t" + txt("vertices") + "\t" + txt("edges") + "\t" + txt("mean") + "\t" + txt("avgGraphDeg") + "\t" + txt("varianceOfBootStrapDegrees") + "\t" + txt("l1") + "\t" + muProxy + "\t" + txt("l2") + "\t" + txt("lmin") + "\t" + txt("lmax") + "\n")
           fw.flush()

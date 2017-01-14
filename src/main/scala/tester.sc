@@ -1,9 +1,6 @@
 
 
+val x = 10 to 50 by 2
 
-val seedSet: Array[Int] = Array(2, 3, 4)
-seedSet.contains(2)
-seedSet.contains(22)
+val y = (10 to 50 by 1).map(e => Math.round(e * 10.0) / 100.0)
 
-
-true && true && false

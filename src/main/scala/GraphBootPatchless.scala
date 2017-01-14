@@ -24,7 +24,7 @@ object GraphBootPatchless {
 
     val seeds: RDD[(Long, Int)] = sc.makeRDD(seedArray)
 
-    var lmsiList = if (method == "par") {
+    var lmsiList = if (method == "parFutures") {
       LMSI.parallelLMSI(graph, seeds, wave)
     }
     else if (method == "seq")
