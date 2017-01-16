@@ -4,7 +4,7 @@ import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.util.control.Breaks._
 
 /**
@@ -58,9 +58,9 @@ object GraphBoot {
     val seedList: List[Int] = seeds.map(e => e._1.toInt).collect().toList
     val nSeedLength: Int = candidateList.length
     val seedLength: Int = seedList.length
-    val probMap: (mutable.LinkedHashMap[Int, Int], Int) = reverseProbMap(candidateList, degrees)
-    val probs: mutable.LinkedHashMap[Int, Int] = probMap._1
-
+    val probMap: (mutable.ListMap[Int, Int], Int) = reverseProbMap(candidateList, degrees)
+    val probs: mutable.ListMap[Int, Int] = probMap._1
+    println(probs)
     val inter: Int = probMap._2
 
     for (i <- 1 to bootCount) {
@@ -88,12 +88,12 @@ object GraphBoot {
       }
       //add avg degree from this bootstrap
       bstrapDegrees += avgDegree
-      println(avgDegree + "" + kNonSeedMap)
+      println(avgDegree + " " + kNonSeedMap)
     }
     bstrapDegrees.toList
   }
 
-  def pickWithProb(probs: mutable.LinkedHashMap[Int, Int], pro: Int): Int = {
+  def pickWithProb(probs: mutable.ListMap[Int, Int], pro: Int): Int = {
     var pickedKey = -1
     breakable {
       for (i <- probs) {
@@ -108,8 +108,7 @@ object GraphBoot {
 
 
   def reverseProbMap(candidateList: List[Int], degrees: Map[Int, Int]) = {
-    val probs = mutable.LinkedHashMap.empty[Int, Int]
-    var sum: Double = degrees.map(e => e._2).sum
+    val probs = mutable.ListMap.empty[Int, Int]
     var inter = 0
     for (v <- candidateList) {
       val j = (1000 * (1.0 / degrees(v))).toInt
@@ -118,9 +117,39 @@ object GraphBoot {
       }
       probs.put(v, inter + j)
       inter += j
+      println("putting " + v)
     }
     if (inter <= 0) throw new IllegalArgumentException("overflow in prob map computations")
     (probs, inter)
+  }
+
+  def reverseProbArray(candidateList: List[Int], degrees: Map[Int, Int]): ArrayBuffer[(Int, Int)] = {
+    val probs = mutable.ArrayBuffer[(Int, Int)]()
+    var inter = 0
+    var i = 0
+    for (v <- candidateList) {
+      val j = (1000 * (1.0 / degrees(v))).toInt
+      if (degrees(v) != 0 && j < 1) {
+        println("illegal state")
+      }
+      probs += Tuple2(v, inter + j)
+      inter += j
+      i += 1
+    }
+    return (probs)
+  }
+
+  def pickWithProbArray(probs: mutable.ArrayBuffer[(Int, Int)], pro: Int): Int = {
+    var pickedKey = -1
+    breakable {
+      for (i <- probs) {
+        if (pro <= i._2) {
+          pickedKey = i._1
+          break
+        }
+      }
+    }
+    pickedKey
   }
 
 }
