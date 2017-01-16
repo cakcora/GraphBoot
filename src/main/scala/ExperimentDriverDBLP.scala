@@ -30,9 +30,9 @@ object ExperimentDriverDBLP {
       var graph: Graph[Int, Int] = SyntheticData.synthGraphGenerator(sc, "dblp", grOptions)
       graph = GraphCleaning.cleanGraph(sc, graph.mapVertices((a, b) => a.toInt))
       val degreeMap: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
-      val maxSeed = 512
+      val maxSeed = 100
       val allSeeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
-      for (seedCount <- List(1, 1, 1, 1, 2, 4, 8, 16, 32, 64, 128, 256, maxSeed)) {
+      for (seedCount <- List(1, 5, 10, 20, 30, 40, 50)) {
         println("we have seed " + seedCount)
         val seedSet: Array[(VertexId, Int)] = allSeeds.take(seedCount)
 

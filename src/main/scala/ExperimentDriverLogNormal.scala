@@ -18,7 +18,7 @@ object ExperimentDriverLogNormal {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
-    val fw: FileWriter = new FileWriter("exp5.txt");
+    val fw: FileWriter = new FileWriter(".txt");
     val header = "wave\tmu\tsigma\tvertices\tseedCount\tbootCount\tbootSamplePercentage\tnumVertices\tnumEdges\tmean\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
     fw.write(header);
 
@@ -26,7 +26,7 @@ object ExperimentDriverLogNormal {
     for (cv <- 1 to 50) {
       println(" iter " + cv)
       for (sigma <- (0 to 20 by 1).map(e => Math.round(e * 10.0) / 100.0)) {
-        for (mu <- (10 to 50 by 1).map(e => Math.round(e * 10.0) / 100.0)) {
+        for (mu <- (10 to 50 by 2).map(e => Math.round(e * 10.0) / 100.0)) {
           val grOptions: Map[String, AnyVal] = Map(("mu", mu), ("sigma", sigma), ("vertices", 10000))
           val graph: Graph[Int, Int] = SyntheticData.synthGraphGenerator(sc, "lognormal", grOptions)
           val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap

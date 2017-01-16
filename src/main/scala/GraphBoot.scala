@@ -58,10 +58,8 @@ object GraphBoot {
     val seedList: List[Int] = seeds.map(e => e._1.toInt).collect().toList
     val nSeedLength: Int = candidateList.length
     val seedLength: Int = seedList.length
-    val probMap: (mutable.ListMap[Int, Int], Int) = reverseProbMap(candidateList, degrees)
-    val probs: mutable.ListMap[Int, Int] = probMap._1
-    println(probs)
-    val inter: Int = probMap._2
+    val probs: mutable.ArrayBuffer[(Int, Int)] = reverseProbArray(candidateList, degrees)
+    val inter: Int = probs(probs.size - 1)._2
 
     for (i <- 1 to bootCount) {
       val kSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
@@ -74,7 +72,7 @@ object GraphBoot {
       }
       val kNonSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
       for (j <- 1 to nSeedLength) {
-        val chosenNseed: Int = pickWithProb(probs, random.nextInt(inter)) // inverse degree probability sampling
+        val chosenNseed: Int = pickWithProbArray(probs, random.nextInt(inter)) // inverse degree probability sampling
         kNonSeedMap(degrees(chosenNseed)) += 1
       }
 
@@ -88,45 +86,15 @@ object GraphBoot {
       }
       //add avg degree from this bootstrap
       bstrapDegrees += avgDegree
-      println(avgDegree + " " + kNonSeedMap)
+      //      println(avgDegree + " " + kNonSeedMap)
     }
     bstrapDegrees.toList
   }
 
-  def pickWithProb(probs: mutable.ListMap[Int, Int], pro: Int): Int = {
-    var pickedKey = -1
-    breakable {
-      for (i <- probs) {
-        if (pro <= i._2) {
-          pickedKey = i._1
-          break
-        }
-      }
-    }
-    pickedKey
-  }
-
-
-  def reverseProbMap(candidateList: List[Int], degrees: Map[Int, Int]) = {
-    val probs = mutable.ListMap.empty[Int, Int]
-    var inter = 0
-    for (v <- candidateList) {
-      val j = (1000 * (1.0 / degrees(v))).toInt
-      if (degrees(v) != 0 && j < 1) {
-        println("illegal state")
-      }
-      probs.put(v, inter + j)
-      inter += j
-      println("putting " + v)
-    }
-    if (inter <= 0) throw new IllegalArgumentException("overflow in prob map computations")
-    (probs, inter)
-  }
 
   def reverseProbArray(candidateList: List[Int], degrees: Map[Int, Int]): ArrayBuffer[(Int, Int)] = {
     val probs = mutable.ArrayBuffer[(Int, Int)]()
     var inter = 0
-    var i = 0
     for (v <- candidateList) {
       val j = (1000 * (1.0 / degrees(v))).toInt
       if (degrees(v) != 0 && j < 1) {
@@ -134,7 +102,6 @@ object GraphBoot {
       }
       probs += Tuple2(v, inter + j)
       inter += j
-      i += 1
     }
     return (probs)
   }
