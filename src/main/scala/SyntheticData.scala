@@ -41,6 +41,12 @@ object SyntheticData {
       case "facebook" => {
         GraphLoader.edgeListFile(sc, "src/main/resources/facebook-links.txt")
       }
+      case "enron" => {
+        GraphLoader.edgeListFile(sc, "C:\\Projects\\DisagioData/Email-Enron.txt")
+      }
+      case "wiki" => {
+        GraphLoader.edgeListFile(sc, "C:\\Projects\\DisagioData/WikiTalk.txt")
+      }
       case "slava" => {
         GraphLoader.edgeListFile(sc, "src/main/resources/dataFromSlava.txt")
       }

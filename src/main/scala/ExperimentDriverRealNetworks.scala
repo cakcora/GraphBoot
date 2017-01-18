@@ -8,7 +8,7 @@ import org.apache.spark.sql.SparkSession
 /**
   * Created by cxa123230 on 11/15/2016.
   */
-object ExperimentDriverDblpAndFb {
+object ExperimentDriverRealNetworks {
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
@@ -39,8 +39,8 @@ object ExperimentDriverDblpAndFb {
         val muProxy: Double = Common.proxyMu(allSeeds.takeSample(true, seedCount).map(e => e._1.toInt), degreeMap)
         val txtPar = GraphBoot.compute(sc, graph, degreeMap, seedSet, expOptions, "parSpark")
         printResults(fw, wave, muProxy, seedCount, expOptions, txtPar, "parSpark")
-        val txtSeq = GraphBoot.compute(sc, graph, degreeMap, seedSet, expOptions, "seq")
-        printResults(fw, wave, muProxy, seedCount, expOptions, txtSeq, "seq")
+        //        val txtSeq = GraphBoot.compute(sc, graph, degreeMap, seedSet, expOptions, "seq")
+        //        printResults(fw, wave, muProxy, seedCount, expOptions, txtSeq, "seq")
 
         fw.flush()
       }

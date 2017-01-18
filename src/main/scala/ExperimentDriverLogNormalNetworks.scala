@@ -8,7 +8,7 @@ import org.apache.spark.sql.SparkSession
 /**
   * Created by cxa123230 on 11/15/2016.
   */
-object ExperimentDriverLogNormal {
+object ExperimentDriverLogNormalNetworks {
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
