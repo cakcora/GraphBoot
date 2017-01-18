@@ -5,7 +5,6 @@ import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import scala.util.control.Breaks._
 
 /**
   * Created by cxa123230 on 11/3/2016.
@@ -72,7 +71,7 @@ object GraphBoot {
       }
       val kNonSeedMap: mutable.Map[Int, Int] = mutable.Map.empty[Int, Int].withDefaultValue(0)
       for (j <- 1 to nSeedLength) {
-        val chosenNseed: Int = pickWithProbArray(probs, random.nextInt(inter)) // inverse degree probability sampling
+        val chosenNseed: Int = findInProbArray(probs, random.nextInt(inter)) // inverse degree probability sampling
         kNonSeedMap(degrees(chosenNseed)) += 1
       }
 
@@ -95,10 +94,11 @@ object GraphBoot {
   def reverseProbArray(candidateList: List[Int], degrees: Map[Int, Int]): ArrayBuffer[(Int, Int)] = {
     val probs = mutable.ArrayBuffer[(Int, Int)]()
     var inter = 0
+    val multiplier = 1 + degrees.map(e => e._2).max
     for (v <- candidateList) {
-      val j = (1000 * (1.0 / degrees(v))).toInt
+      val j = (multiplier * (1.0 / degrees(v))).toInt
       if (degrees(v) != 0 && j < 1) {
-        println("illegal state")
+        println("illegal state " + degrees(v))
       }
       probs += Tuple2(v, inter + j)
       inter += j
@@ -106,17 +106,26 @@ object GraphBoot {
     return (probs)
   }
 
-  def pickWithProbArray(probs: mutable.ArrayBuffer[(Int, Int)], pro: Int): Int = {
-    var pickedKey = -1
-    breakable {
-      for (i <- probs) {
-        if (pro <= i._2) {
-          pickedKey = i._1
-          break
-        }
+
+  def findInProbArray(p3: ArrayBuffer[(Int, Int)], target: Int): Int = {
+
+    var left = 0
+    var right = p3.length - 1
+    if (target > p3(right)._2) return -1
+    while (p3(left)._2 < target) {
+      val mid = left + (right - left) / 2
+      if (p3(left)._2 >= target) {
+        return p3(left)._1
+      }
+      if (p3(mid)._2 < target) {
+        left = mid + 1
+      }
+      else if (p3(mid)._2 >= target) {
+        right = mid
       }
     }
-    pickedKey
+    return p3(left)._1
+
   }
 
 }

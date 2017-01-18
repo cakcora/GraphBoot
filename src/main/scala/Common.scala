@@ -48,7 +48,7 @@ object Common {
     graph.mapVertices((id, _) => 1500)
   }
 
-  def proxyMu(seeds: Array[(Int)], degreeMap: Map[Int, Int]): Double = {
+  def proxyMu(seeds: Array[Int], degreeMap: Map[Int, Int]): Double = {
     val degreeList = degreeMap.filter(e => seeds.contains(e._1)).map(e => e._2.toDouble)
     val d = breeze.stats.meanAndVariance(degreeList)
     return d.mean

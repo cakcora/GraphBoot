@@ -38,6 +38,9 @@ object SyntheticData {
       case "dblp" => {
         GraphLoader.edgeListFile(sc, "src/main/resources/dblpgraph.txt")
       }
+      case "facebook" => {
+        GraphLoader.edgeListFile(sc, "src/main/resources/facebook-links.txt")
+      }
       case "slava" => {
         GraphLoader.edgeListFile(sc, "src/main/resources/dataFromSlava.txt")
       }

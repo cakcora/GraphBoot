@@ -18,7 +18,7 @@ object ExperimentDriverLogNormal {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
-    val fw: FileWriter = new FileWriter(".txt");
+    val fw: FileWriter = new FileWriter("expLogNormal.txt");
     val header = "wave\tmu\tsigma\tvertices\tseedCount\tbootCount\tbootSamplePercentage\tnumVertices\tnumEdges\tmean\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
     fw.write(header);
 
@@ -29,15 +29,15 @@ object ExperimentDriverLogNormal {
         for (mu <- (10 to 50 by 2).map(e => Math.round(e * 10.0) / 100.0)) {
           val grOptions: Map[String, AnyVal] = Map(("mu", mu), ("sigma", sigma), ("vertices", 10000))
           val graph: Graph[Int, Int] = SyntheticData.synthGraphGenerator(sc, "lognormal", grOptions)
-          val degrees: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
+          val degreeMap: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
           val seedCount = 20
           val maxSeed = 30
           val allSeeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
           val seedSet: Array[(VertexId, Int)] = allSeeds.take(seedCount)
-          val muProxy: Double = Common.proxyMu(seedSet.map(e => e._1.toInt), degrees)
+          val muProxy: Double = Common.proxyMu(allSeeds.takeSample(true, seedCount).map(e => e._1.toInt), degreeMap)
 
           val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave), ("bootSamplePercentage", 100), ("patchCount", 1))
-          val txt = GraphBoot.compute(sc, graph, degrees, seedSet, expOptions, "parSpark")
+          val txt = GraphBoot.compute(sc, graph, degreeMap, seedSet, expOptions, "parSpark")
 
           fw.write(wave + "\t" + grOptions("mu") + "\t" + grOptions("sigma") + "\t" + grOptions("vertices") + "\t" + seedCount + "\t" + expOptions("bootCount") + "\t" + expOptions("bootSamplePercentage") + "\t" + txt("vertices") + "\t" + txt("edges") + "\t" + txt("mean") + "\t" + txt("avgGraphDeg") + "\t" + txt("varianceOfBootStrapDegrees") + "\t" + txt("l1") + "\t" + muProxy + "\t" + txt("l2") + "\t" + txt("lmin") + "\t" + txt("lmax") + "\n")
           fw.flush()

@@ -18,7 +18,7 @@ object LMSI {
     val weightedGraph: Graph[Int, Int] = Common.weightVertices(graph)
     val initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
     val gr: Graph[Int, Int] = Common.subgraphWithWave(initialGraph, wave)
-    println(gr.numVertices + " vertices " + gr.numEdges + " edges")
+    //    println(gr.numVertices + " vertices " + gr.numEdges + " edges")
     val kAll: RDD[(VertexId, Int, VertexId, Int, Int)] =
       gr.triplets.map(e => (e.srcId, e.srcAttr, e.dstId, e.dstAttr, if (e.srcAttr <= e.dstAttr) 1 + e.srcAttr else 1 + e.dstAttr))
 
