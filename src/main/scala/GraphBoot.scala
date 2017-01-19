@@ -27,13 +27,23 @@ object GraphBoot {
     else {
       throw new IllegalArgumentException("method selection is wrong with " + method)
     }
+
     val bstrapDegrees: List[Double] = boot(bootCount, lmsiList, degrees, seeds)
 
     val M: Double = breeze.stats.mean(bstrapDegrees)
 
     val collect: List[Double] = degrees.map(e => e._2.toDouble).toList
     val avgGraphDeg: Double = breeze.stats.mean(collect)
-
+    val medGraphDeg: Double = {
+      val s = collect.size
+      val sorts = collect.sorted.toIndexedSeq
+      if (s % 2 == 1) {
+        sorts(s / 2)
+      }
+      else {
+        (sorts(1 + s / 2) + sorts(s / 2)) / 2
+      }
+    }
     val dc = (i: Double) => {
       DescriptiveStats.percentile(bstrapDegrees, i)
     }
@@ -41,8 +51,9 @@ object GraphBoot {
     val lmin: Double = bstrapDegrees.min(Ordering.Double)
     val l2: Double = dc(0.95)
     val lmax: Double = bstrapDegrees.max(Ordering.Double)
-
-    val txt: Map[String, AnyVal] = Map(("vertices", graph.numVertices), ("edges", graph.numEdges), ("mean", M), ("avgGraphDeg", avgGraphDeg), ("varianceOfBootStrapDegrees", breeze.stats.variance(bstrapDegrees)), ("l1", l1), ("l2", l2),
+    val vertexPercentage = lmsiList.length.toDouble / graph.numVertices
+    val uniqueVertexPercentage = lmsiList.distinct.size.toDouble / graph.numVertices
+    val txt: Map[String, AnyVal] = Map(("lmsiAll", vertexPercentage), ("lmsiDistinct", uniqueVertexPercentage), ("edges", graph.numEdges), ("mean", M), ("medGraphDeg", medGraphDeg), ("avgGraphDeg", avgGraphDeg), ("varianceOfBootStrapDegrees", breeze.stats.variance(bstrapDegrees)), ("l1", l1), ("l2", l2),
       ("lmin", lmin), ("lmax", lmax))
 
 

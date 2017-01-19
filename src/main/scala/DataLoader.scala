@@ -6,7 +6,7 @@ import org.apache.spark.rdd.RDD
 /**
   * Created by cxa123230 on 11/3/2016.
   */
-object SyntheticData {
+object DataLoader {
 
   def getTestGraph(sc: SparkContext): Graph[Int, Int] = {
     val re: RDD[(Long, Long)] = sc.parallelize(Array((1L, 2L), (1L, 3L),
@@ -33,7 +33,7 @@ object SyntheticData {
 
       }
       case "rmat" =>{
-        GraphGenerators.rmatGraph(sc,1000, 15000)
+        GraphGenerators.rmatGraph(sc, options("vertices").asInstanceOf[Int], 10 * options("vertices").asInstanceOf[Int])
       }
       case "dblp" => {
         GraphLoader.edgeListFile(sc, "src/main/resources/dblpgraph.txt")
