@@ -23,7 +23,7 @@ vis<-function(resultFolder,fileVal,dataset){
   fName<- paste(resultFolder,fileVal,".txt",sep="")
   
   ex <- read.table(file=fName, header=TRUE,sep="\t")
-  effect<-ddply(ex,.(seed),summarise,V1=mean(mean/avgGraphDeg),V2=mean(varianceOfBootStrapDegrees))
+  effect<-ddply(ex,.(seed),summarise,V1=mean(mean/avgGraphDeg),V2=mean(varianceOfBootStrapDegrees),V3=mean(lmsiDistinct))
   
    effect<-cbind(effect,dataset)
   
@@ -33,36 +33,28 @@ vis<-function(resultFolder,fileVal,dataset){
 resultFolder<-"C:/Users/cxa123230/IdeaProjects/GraphBoot/results/"
  o1<-vis(resultFolder,"expenron" ,"Enron")
  o2<-vis(resultFolder,"expDBLP" ,"Dblp")
- o3<-vis(resultFolder,"expfacebook" ,"FB")
+ o3<-vis(resultFolder,"expfacebook" ,"Facebook")
+ o4<-vis(resultFolder,"expepinions" ,"Epinions")
   
  df<-data.frame(o1)
  df<-rbind(df,o2)
  df<-rbind(df,o3)
-  m11<-ggplot(df, aes(x=seed,y = V1,color=dataset,group=dataset))+geom_line(size=2)+scale_y_continuous(name=expression(paste(bar(x)," / ",mu)))+scale_color_manual(values=vals) 
-m11
+  df<-rbind(df,o4)
+  m11<-ggplot(df, aes(x=seed,y =V1, color=dataset, group=dataset)) + geom_line(size=2)+scale_y_continuous(name=expression(paste(bar(x)," / ",mu))) +theme(legend.position = c(0.8, 0.8),text = element_text(size=16))
+m11 
+ m12<-ggplot(df, aes(x=seed,y =V2, color=dataset, group=dataset)) + geom_line(size=2)+scale_y_continuous(limits=c(0,1),name=expression("Variance in bootstrap")) +theme(legend.position = c(0.8, 0.8),text = element_text(size=16))
+m12
+
+ m13<-ggplot(df, aes(x=seed,y =V3, color=dataset, group=dataset)) + geom_line(size=2)+scale_y_continuous(name=expression("% nodes sampled")) +theme(legend.position = c(0.8, 0.8),text = element_text(size=16))
+m13 
+
+ggsave(filename=paste(resultFolder,"results.eps",sep=""),plot=m11,width=6,height=4,unit="in")
 
 ```
 
 
 
-```{r}
 
-
-graphDblp<-read_graph("C:/Projects/DisagioData/facebook-links.txt", directed = FALSE,format ="edgelist")
-distDblp<-degree_distribution(graphDblp)
-d<-data.frame(distDblp)
-d$length<-seq(1,length(distDblp))
-ggplot(d,aes(x=length,y=distDblp))+geom_line()+scale_x_log10()+xlim(0,100)
-
- 
- 
-graphEnron<-read_graph("C:/Projects/DisagioData/Email-Enron.txt", directed = FALSE,format ="edgelist")
-distE<-degree_distribution(graphEnron,mode="all")
-dd<-data.frame(distE)
-dd$length<-seq(1,length(distE))
-ggplot(dd,aes(x=length,y=distE))+geom_line()+scale_x_log10()+xlim(0,100)
-
-```
 
 
 
