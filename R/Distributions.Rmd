@@ -2,6 +2,9 @@
 title: "Distributions"
 output: html_document
 ---
+## GraphBoot R Scripts
+
+Creates degree distributions of the real world networks that are used in our experiments:
 
 ```{r}
 require(plyr)
@@ -18,7 +21,7 @@ vis<-function(inputFolder,dataset){
    
 }
 resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/"
-data<- vis(resultFolder,"facebook")
+data<- vis(resultFolder,"Facebook")
 data<-rbind(data,vis(resultFolder,"Enron"))
 data<-rbind(data,vis(resultFolder,"Dblp"))
 data<-rbind(data,vis(resultFolder,"Epinions"))
