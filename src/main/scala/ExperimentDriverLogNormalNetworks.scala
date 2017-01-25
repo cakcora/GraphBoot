@@ -18,7 +18,8 @@ object ExperimentDriverLogNormalNetworks {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
-    val fw: FileWriter = new FileWriter("expLogNormal.txt");
+    val networkName = "lognormal"
+    val fw: FileWriter = new FileWriter("exp" + networkName + ".txt");
     val header = "wave\tmu\tsigma\tvertices\tseedCount\tbootCount\tbootSamplePercentage\tlmsiAll\tlmsiDistinct\tmean\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
     fw.write(header);
 
@@ -28,7 +29,7 @@ object ExperimentDriverLogNormalNetworks {
       for (sigma <- (0 to 20 by 1).map(e => Math.round(e * 10.0) / 100.0)) {
         for (mu <- (10 to 50 by 4).map(e => Math.round(e * 10.0) / 100.0)) {
           val grOptions: Map[String, AnyVal] = Map(("mu", mu), ("sigma", sigma), ("vertices", 10000))
-          val graph: Graph[Int, Int] = DataLoader.synthGraphGenerator(sc, "rmat", grOptions)
+          val graph: Graph[Int, Int] = DataLoader.synthGraphGenerator(sc, networkName, grOptions)
           val degreeMap: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
           val seedCount = 20
           val maxSeed = 30

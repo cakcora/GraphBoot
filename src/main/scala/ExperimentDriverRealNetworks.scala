@@ -18,7 +18,7 @@ object ExperimentDriverRealNetworks {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
-    val networkName = "facebook"
+    val networkName = "epinions"
     println("data set is: " + networkName)
     val fw: FileWriter = new FileWriter("exp" + networkName + ".txt");
     val header = "method\twave\tseed\tlmsiAll\tlmsiDistinct\tmean\tmedGraphDeg\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"

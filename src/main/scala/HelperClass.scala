@@ -20,7 +20,7 @@ object HelperClass {
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
 
-    val dataset: String = "dblp"
+    val dataset: String = "epinions"
     val graph: Graph[Int, Int] = GraphCleaning.cleanGraph(sc, DataLoader.synthGraphGenerator(sc, dataset, Map()))
     val degreeMap = mutable.Map.empty[Int, Int].withDefaultValue(0)
     for (x <- graph.degrees.collect()) {

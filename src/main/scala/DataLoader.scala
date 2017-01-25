@@ -50,6 +50,9 @@ object DataLoader {
       case "slava" => {
         GraphLoader.edgeListFile(sc, "src/main/resources/dataFromSlava.txt")
       }
+      case "epinions" => {
+        GraphLoader.edgeListFile(sc, "C:\\Projects\\DisagioData/soc-Epinions1.txt")
+      }
       case _: String => {
         println("No preference for graph type: Using a random star graph.")
         GraphGenerators.starGraph(sc, 100)
