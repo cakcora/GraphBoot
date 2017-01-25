@@ -21,7 +21,17 @@ object HelperClass {
     val sc = spark.sparkContext
 
     val dataset: String = "epinions"
-    val graph: Graph[Int, Int] = GraphCleaning.cleanGraph(sc, DataLoader.synthGraphGenerator(sc, dataset, Map()))
+    val graph: Graph[Int, Int] = GraphCleaning.cleanGraph(sc, DataLoader.load(sc, dataset, Map()))
+    if (false) {
+      print(dataset, graph)
+    }
+    println(graph.numEdges + " " + graph.numVertices)
+
+
+  }
+
+
+  def print(dataset: String, graph: Graph[Int, Int]): Unit = {
     val degreeMap = mutable.Map.empty[Int, Int].withDefaultValue(0)
     for (x <- graph.degrees.collect()) {
       degreeMap(x._2) += 1
@@ -32,9 +42,5 @@ object HelperClass {
       fw.append(x._1 + "\t" + x._2 + "\t" + x._2 / sum + "\n")
     }
     fw.close()
-
-
   }
-
-
 }

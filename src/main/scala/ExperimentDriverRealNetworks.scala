@@ -27,11 +27,14 @@ object ExperimentDriverRealNetworks {
     val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave))
 
 
+    var graph: Graph[Int, Int] = DataLoader.load(sc, networkName, Map())
+    println(graph.numEdges + " directed edges among " + graph.numVertices + " vertices")
+    //    graph = GraphCleaning.cleanGraph(sc, graph)
+    graph = GraphCleaning.undirectedGraph(graph, 1)
+    val degreeMap: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
+    println(graph.numEdges + " edges among " + graph.numVertices + " vertices")
     for (iteration <- 1 to 50) {
       println(" iter " + iteration)
-      var graph: Graph[Int, Int] = DataLoader.synthGraphGenerator(sc, networkName, Map())
-      graph = GraphCleaning.cleanGraph(sc, graph.mapVertices((a, b) => a.toInt))
-      val degreeMap: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
       val maxSeed = 100
       val allSeeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
       for (seedCount <- List(1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) {

@@ -9,13 +9,13 @@ import org.apache.spark.rdd.RDD
 object DataLoader {
 
   def getTestGraph(sc: SparkContext): Graph[Int, Int] = {
-    val re: RDD[(Long, Long)] = sc.parallelize(Array((1L, 2L), (1L, 3L),
-      (2L, 4L), (2L, 5L), (5L, 4L), (5L, 6L), (4L, 7L)))
+    val re: RDD[(Long, Long)] = sc.parallelize(Array((1L, 2L), (1L, 2L), (2L, 1L), (1L, 3L), (1L, 3L), (4L, 2L), (2L, 4L), (2L, 5L), (5L, 4L), (5L, 6L), (4L, 7L)))
     val tupleGraph = Graph.fromEdgeTuples(re, defaultValue = 1,
       uniqueEdges = Some(PartitionStrategy.RandomVertexCut))
     tupleGraph
   }
-  def synthGraphGenerator(sc: SparkContext, graphType: String, options:Map[String, AnyVal]): Graph[Int, Int] = {
+
+  def load(sc: SparkContext, graphType: String, options: Map[String, AnyVal]): Graph[Int, Int] = {
 
     graphType match {
       case "grid" => {
@@ -33,7 +33,9 @@ object DataLoader {
 
       }
       case "rmat" =>{
-        GraphGenerators.rmatGraph(sc, options("vertices").asInstanceOf[Int], 10 * options("vertices").asInstanceOf[Int])
+        val requestedNumVertices: Int = options("vertices").asInstanceOf[Int]
+        val edgeDensity: Int = options("edgeDensity").asInstanceOf[Int]
+        GraphGenerators.rmatGraph(sc, requestedNumVertices, edgeDensity * requestedNumVertices)
       }
       case "dblp" => {
         GraphLoader.edgeListFile(sc, "src/main/resources/dblpgraph.txt")

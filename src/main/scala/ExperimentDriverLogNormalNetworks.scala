@@ -27,9 +27,9 @@ object ExperimentDriverLogNormalNetworks {
     for (cv <- 1 to 50) {
       println(" iter " + cv)
       for (sigma <- (0 to 20 by 1).map(e => Math.round(e * 10.0) / 100.0)) {
-        for (mu <- (10 to 50 by 4).map(e => Math.round(e * 10.0) / 100.0)) {
-          val grOptions: Map[String, AnyVal] = Map(("mu", mu), ("sigma", sigma), ("vertices", 10000))
-          val graph: Graph[Int, Int] = DataLoader.synthGraphGenerator(sc, networkName, grOptions)
+        for (mu <- (10 to 42 by 4).map(e => Math.round(e * 10.0) / 100.0)) {
+          val grOptions: Map[String, AnyVal] = Map(("mu", mu), ("sigma", sigma), ("vertices", 100000))
+          val graph: Graph[Int, Int] = DataLoader.load(sc, networkName, grOptions)
           val degreeMap: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
           val seedCount = 20
           val maxSeed = 30

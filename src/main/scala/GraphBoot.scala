@@ -106,13 +106,19 @@ object GraphBoot {
     val probs = mutable.ArrayBuffer[(Int, Int)]()
     var inter = 0
     val multiplier = 1 + degrees.map(e => e._2).max
+    //temporarily using 1000 instead of multiplier
     for (v <- candidateList) {
-      val j = (multiplier * (1.0 / degrees(v))).toInt
+      val j = (1000 * (1.0 / degrees(v))).toInt
       if (degrees(v) != 0 && j < 1) {
-        println("illegal state " + degrees(v))
+        //println("illegal state " + degrees(v))
+        probs += Tuple2(v, inter + 1)
+        // assigning a prob of 1 to nodes with degree>1000
+        inter += 1
       }
-      probs += Tuple2(v, inter + j)
-      inter += j
+      else {
+        probs += Tuple2(v, inter + j)
+        inter += j
+      }
     }
     return (probs)
   }
