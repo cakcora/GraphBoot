@@ -18,26 +18,32 @@ object ExperimentDriverRealNetworks {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
-    val networkName = "epinions"
+    val networkName = "wiki"
     println("data set is: " + networkName)
-    val fw: FileWriter = new FileWriter("exp" + networkName + ".txt");
+    val fw: FileWriter = new FileWriter("expWaved" + networkName + ".2txt");
     val header = "method\twave\tseed\tlmsiAll\tlmsiDistinct\tmean\tmedGraphDeg\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
     fw.write(header);
     val wave = 2
-    val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave))
 
 
     var graph: Graph[Int, Int] = DataLoader.load(sc, networkName, Map())
     println(graph.numEdges + " directed edges among " + graph.numVertices + " vertices")
-    //    graph = GraphCleaning.cleanGraph(sc, graph)
-    graph = GraphCleaning.undirectedGraph(graph, 1)
+    if (List("facebook", "dblp").contains(networkName))
+      graph = GraphCleaning.cleanGraph(sc, graph)
+    else if (List("enron", "wiki", "epinions").contains(networkName))
+      graph = GraphCleaning.undirectedGraph(graph, 1)
+    else {
+      throw new IllegalArgumentException(networkName + " network is not available")
+    }
     val degreeMap: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
-    println(graph.numEdges + " edges among " + graph.numVertices + " vertices")
+    println(graph.numEdges + " cleaned edges among " + graph.numVertices + " vertices")
     for (iteration <- 1 to 50) {
       println(" iter " + iteration)
       val maxSeed = 100
       val allSeeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
-      for (seedCount <- List(1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) {
+      val seedCount = 10
+      for (wave <- List(0, 1, 2, 3, 4, 5, 6, 7, 8)) {
+        val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave))
         println("we have seed " + seedCount)
         val seedSet: Array[(VertexId, Int)] = allSeeds.take(seedCount)
 

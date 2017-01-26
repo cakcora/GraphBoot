@@ -20,7 +20,7 @@ object ExperimentDriverRMatNetworks {
     val sc = spark.sparkContext
     val networkName = "rmat"
     val fw: FileWriter = new FileWriter("exp" + networkName + ".txt");
-    val header = "wave\tvertices\tseedCount\tbootCount\tbootSamplePercentage\tlmsiAll\tlmsiDistinct\tmean\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
+    val header = "wave\tvertices\tseed\tbootCount\tbootSamplePercentage\tlmsiAll\tlmsiDistinct\tmean\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
     fw.write(header);
 
     val wave = 2

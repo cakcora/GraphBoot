@@ -20,7 +20,7 @@ object ExperimentDriverLogNormalNetworks {
     val sc = spark.sparkContext
     val networkName = "lognormal"
     val fw: FileWriter = new FileWriter("exp" + networkName + ".txt");
-    val header = "wave\tmu\tsigma\tvertices\tseedCount\tbootCount\tbootSamplePercentage\tlmsiAll\tlmsiDistinct\tmean\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
+    val header = "wave\tmu\tsigma\tvertices\tseed\tbootCount\tbootSamplePercentage\tlmsiAll\tlmsiDistinct\tmean\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
     fw.write(header);
 
     val wave = 2
