@@ -28,7 +28,14 @@ object HoldSampleFramework {
     val wave = 2
     val fr = Source.fromFile(dir + fileName).getLines()
 
-    //seed 1 cuneytgurcan 38813037
+    /*seed 1 cuneytgurcan 38813037
+
+    @iFredorg
+    @NateAgapi
+    @onlimelite
+    @natasha_tracy
+    @AlexElk123
+    */
     /*
     38813037	21467265
 38813037	35603047
@@ -43,7 +50,7 @@ object HoldSampleFramework {
       val arr = f.split("\t")
       val v1 = arr(0).toInt
       val v2 = arr(1).toInt
-      if (v1 == 38813037 || v2 == 38813037) println(f)
+      if (v1 == 171367366 || v2 == 171367366) println(f)
     }
 
   }

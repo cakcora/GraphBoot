@@ -20,9 +20,9 @@ object HelperClass {
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
 
-    val dataset: String = "epinions"
+    val dataset: String = "gowalla"
     val graph: Graph[Int, Int] = GraphCleaning.cleanGraph(sc, DataLoader.load(sc, dataset, Map()))
-    if (false) {
+    if (true) {
       print(dataset, graph)
     }
     println(graph.numEdges + " " + graph.numVertices)
