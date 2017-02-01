@@ -49,6 +49,12 @@ object DataLoader {
       case "wiki" => {
         GraphLoader.edgeListFile(sc, "C:\\Projects\\DisagioData/WikiTalk.txt")
       }
+      case "gowalla" => {
+        GraphLoader.edgeListFile(sc, "C:\\Projects\\DisagioData/Gowalla_edges.txt")
+      }
+      case "kite" => {
+        GraphLoader.edgeListFile(sc, "C:\\Projects\\DisagioData/Brightkite_edges.txt")
+      }
       case "slava" => {
         GraphLoader.edgeListFile(sc, "src/main/resources/dataFromSlava.txt")
       }
