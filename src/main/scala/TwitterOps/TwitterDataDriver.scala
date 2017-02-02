@@ -20,18 +20,7 @@ object TwitterDataDriver {
   Logger.getLogger("org.apache.spark.storage.BlockManager").setLevel(Level.ERROR)
 
 
-  def haveResource(count: Int, lastTime: Long): Boolean = {
-    val rate = 15
-    if (count <= (rate - 1)) return true
-    else {
-      val currentTime = System.currentTimeMillis()
-      if (lastTime <= currentTime) return true
-      else {
-        Thread.sleep(10000)
-        return haveResource(count, lastTime)
-      }
-    }
-  }
+
 
   def main(args: Array[String]) {
 
@@ -46,12 +35,13 @@ object TwitterDataDriver {
 
     val seeds = List("CDepression_UK", "AlexElk123", "ImNotFine_x", "ChildMindDotOrg", "BipolarTu", "worthlivingnow", "natasha_tracy", "CPMHealthCare", "BipolarGrrl", "sadinthehead", "PROJECT375", "angelsdemonsorg", "m_vanackeren")
 
-    val filename: String = "those.txt"
+    val filename: String = "userinfo.txt"
     val nextList: Set[String] = getNextSet(filename)
     val fw = new FileWriter(filename, true)
     var count = 0;
     val rate = 15
     var nextTime = System.currentTimeMillis() + rate * 60 * 1000
+    var remains = nextList.size
     for (seed <- nextList) {
       count = (count + 1) % (rate + 1)
       if (count == 0) {
@@ -62,9 +52,8 @@ object TwitterDataDriver {
         nextTime = System.currentTimeMillis() + rate * 60 * 1000
         count = 1
       }
-      println("Using resource " + count + " for " + seed + " at time " + System.currentTimeMillis() / 1000)
-
-      val se = scala.collection.mutable.Buffer.empty[TwitterUser]
+      remains -= 1
+      println(remains + " to go, using " + count + " for " + seed + " at time " + System.currentTimeMillis() / 1000)
 
       val cursor = -1
       try {
@@ -79,6 +68,7 @@ object TwitterDataDriver {
     fw.close()
   }
 
+
   def getFolList(twitter: Twitter, seed: String, cursor: Int): mutable.Buffer[TwitterUser] = {
     val se = scala.collection.mutable.Buffer.empty[TwitterUser]
     val f = twitter.getFollowersList(seed, cursor, 200)
@@ -90,6 +80,7 @@ object TwitterDataDriver {
       val scr = f.getScreenName
       val loc = f.getLocation.replaceAll(regex, " ")
       val fol = f.getFollowersCount
+      val fri = f.getFriendsCount
       val cre = f.getCreatedAt
 
       val des = f.getDescription.replaceAll(regex, " ")
@@ -99,7 +90,7 @@ object TwitterDataDriver {
       val tim = f.getTimeZone
       val bac = f.getProfileBackgroundColor
       val sta = f.getStatusesCount
-      val usr = TwitterUser(fro, scr, loc, fol, cre, des, lan, lis, wit, tim, bac, sta)
+      val usr = TwitterUser(fro, scr, loc, fol, fri, cre, des, lan, lis, wit, tim, bac, sta)
       se += usr
     }
     println(" " + se.length + " followers found")
@@ -114,10 +105,10 @@ object TwitterDataDriver {
 }
 
 
-case class TwitterUser(val fro: String, val scr: String, val loc: String, val fol: Int, val cre: Date, val des: String, val lan: String, val lis: Int, val wit: String, val tim: String, val bac: String, val sta: Int) {
+case class TwitterUser(val fro: String, val scr: String, val loc: String, val fol: Int, val fri: Int, val cre: Date, val des: String, val lan: String, val lis: Int, val wit: String, val tim: String, val bac: String, val sta: Int) {
 
 
-  override def toString = s"$fro\t$scr\t$loc\t$fol\t$cre\t$des\t$lan\t$lis\t$wit\t$tim\t$bac\t$sta"
+  override def toString = s"$fro\t$scr\t$loc\t$fol\t$fri\t$cre\t$des\t$lan\t$lis\t$wit\t$tim\t$bac\t$sta"
 
   override def equals(other: Any): Boolean = other match {
     case that: TwitterUser =>

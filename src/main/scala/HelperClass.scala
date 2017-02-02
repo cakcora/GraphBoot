@@ -15,12 +15,12 @@ object HelperClass {
     val spark = SparkSession
       .builder
       .appName("graphboot")
-      .master("local[16]")
+      .master("local[6]")
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
 
-    val dataset: String = "gowalla"
+    val dataset: String = "kite"
     val graph: Graph[Int, Int] = GraphCleaning.cleanGraph(sc, DataLoader.load(sc, dataset, Map()))
     if (true) {
       print(dataset, graph)

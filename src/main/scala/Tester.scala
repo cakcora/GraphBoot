@@ -1,3 +1,4 @@
+import TwitterOps.Credent
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
 
@@ -16,24 +17,8 @@ object Tester {
       .getOrCreate()
 
     val sc = spark.sparkContext
-    var count = 0;
-    val rate = 2;
-    var nextTime = System.currentTimeMillis() + rate * 60 * 1000
-    for (seed <- List(1, 2, 3, 4, 5, 6, 7, 8, 9)) {
-      count = (count + 1) % (rate + 1)
-      if (count == 0) {
-        while (nextTime > System.currentTimeMillis()) {
-          val waitTime: Long = 10 * 1000
-          Thread.sleep(waitTime)
-        }
-        nextTime = System.currentTimeMillis() + rate * 60 * 1000
-        count = 1
-      }
-      println("Using resource " + count + "for " + seed + " at time " + System.currentTimeMillis() / 1000)
-
-    }
-
-
+    val f = Credent.getApp(1)
+    println(f.accessToken)
   }
 
 }
