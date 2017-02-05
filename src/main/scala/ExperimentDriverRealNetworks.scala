@@ -14,11 +14,11 @@ object ExperimentDriverRealNetworks {
     val spark = SparkSession
       .builder
       .appName("graphboot")
-      .master("local[16]")
+      .master("local")
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
-    val dataset = "kite"
+    val dataset = "gowal la"
     println("data set is: " + dataset)
     val fw: FileWriter = new FileWriter("exp" + dataset + ".txt");
     val header = "method\twave\tseed\tlmsiAll\tlmsiDistinct\tmean\tmedGraphDeg\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"

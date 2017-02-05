@@ -1,4 +1,3 @@
-import TwitterOps.Credent
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
 
@@ -17,8 +16,8 @@ object Tester {
       .getOrCreate()
 
     val sc = spark.sparkContext
-    val f = Credent.getApp(1)
-    println(f.accessToken)
+    val seeds = List("CDepression_UK", "AlexElk123", "ImNotFine_x", "ChildMindDotOrg", "BipolarTu", "worthlivingnow", "natasha_tracy", "CPMHealthCare", "BipolarGrrl", "sadinthehead", "PROJECT375", "angelsdemonsorg", "m_vanackeren")
+
   }
 
 }
