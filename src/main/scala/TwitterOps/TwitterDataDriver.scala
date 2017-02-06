@@ -33,10 +33,10 @@ object TwitterDataDriver {
     val tf = new TwitterFactory(cb.build())
     val twitter = tf.getInstance()
 
-    val seeds = List("CDepression_UK", "AlexElk123", "ImNotFine_x", "ChildMindDotOrg", "BipolarTu", "worthlivingnow", "natasha_tracy", "CPMHealthCare", "BipolarGrrl", "sadinthehead", "PROJECT375", "angelsdemonsorg", "m_vanackeren")
+    val seeds: Set[String] = Source.fromFile("seedList.txt").getLines().toSet
 
     val filename: String = "userinfo.txt"
-    val nextList: Set[String] = getNextSet(filename)
+    val nextList: Set[String] = getNextSet(filename, seeds)
     val fw = new FileWriter(filename, true)
     var count = 0;
     val rate = 15
@@ -97,8 +97,8 @@ object TwitterDataDriver {
     return se
   }
 
-  def getNextSet(fileName: String): Set[String] = {
-    val f = Source.fromFile(fileName).getLines().toArray
+  def getNextSet(fileName: String, seeds: Set[String]): Set[String] = {
+    val f = Source.fromFile(fileName).getLines().toArray.filter(e => seeds.contains(e.split("\t")(0)))
     val tobeFound = f.map(e => e.split("\t")(1)).toSet.diff(f.map(e => e.split("\t")(0)).toSet)
     tobeFound
   }

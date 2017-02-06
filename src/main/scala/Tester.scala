@@ -16,8 +16,14 @@ object Tester {
       .getOrCreate()
 
     val sc = spark.sparkContext
-    val seeds = List("CDepression_UK", "AlexElk123", "ImNotFine_x", "ChildMindDotOrg", "BipolarTu", "worthlivingnow", "natasha_tracy", "CPMHealthCare", "BipolarGrrl", "sadinthehead", "PROJECT375", "angelsdemonsorg", "m_vanackeren")
+    val map = scala.collection.mutable.HashMap.empty[Int, Int].withDefaultValue(0)
 
+    for (a <- List(1, 2, 1, 3, 10, 9, 11)) {
+      map(a) += 1
   }
+    val text = map.toSeq.sorted.map(e => (e._1 + ":" + e._2)).mkString(" ")
+    println(text)
+  }
+
 
 }

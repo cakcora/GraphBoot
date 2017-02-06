@@ -18,15 +18,18 @@ object ClassifierData {
   val minTopicCount = 3
   val fwFile = "featureWords.txt"
   val outFile = "inputGB0.txt"
-  val seeds = List("CDepression_UK", "AlexElk123", "ImNotFine_x", "ChildMindDotOrg", "BipolarTu", "worthlivingnow", "natasha_tracy", "CPMHealthCare", "BipolarGrrl", "sadinthehead", "PROJECT375", "angelsdemonsorg", "m_vanackeren")
-
+  val infoFile = "userinfo.txt"
+  val tweetFile = "timeline.txt"
+  val stopFile = "terrier-stop.txt"
+  val predResultFile: String = "resultPreds.txt"
+  val seeds: Set[String] = Source.fromFile("seedList.txt").getLines().toSet
   def getMinWordLength(): Int = return minWordLength
 
   def getMinWordCount(): Int = return minWordCount
 
   def getMinTopicCount(): Int = return minTopicCount
 
-  def getSeeds(): List[String] = return seeds
+  def getSeeds(): Set[String] = return seeds
 
   def getFwFile(): String = return fwFile
 
@@ -46,18 +49,18 @@ object ClassifierData {
     import spark.implicits._
 
 
-    val stops = spark.read.textFile("terrier-stop.txt").map(r => r.toString).collect().toSet
+    val stops = spark.read.textFile(stopFile).map(r => r.toString).collect().toSet
     println(stops.size + " stop words.")
 
-    val sf = Source.fromFile("seedTweets.txt").getLines().map(e => e.split("\t")).toList
+    val sf = Source.fromFile(tweetFile).getLines().map(e => e.split("\t")).filter(e => seeds.contains(e(0))).toList
     val nsf = Source.fromFile("nseedTweets.txt").getLines().map(e => e.split("\t")).toList
 
-    val stweets: RDD[(String, String)] = sc.makeRDD(sf).map(e => (e(1), clean(e(13), stops, minWordLength))).reduceByKey(_ + " " + _)
+    val stweets: RDD[(String, String)] = sc.makeRDD(sf).map(e => (e(0), clean(e(12), stops, minWordLength))).reduceByKey(_ + " " + _)
     val n = (100 / 36) * stweets.count().toInt
     if (false) {
       createNSeedTweets(sc, stops, minWordLength)
     }
-    println(stweets.count() + " " + n)
+    println("labeled1: " + stweets.count() + " labeled0:" + n)
     val nsTweets: RDD[(String, String)] = sc.makeRDD(sc.makeRDD(nsf).takeSample(false, n).map(f => (f(0), clean(f(1), stops, minWordLength)))).reduceByKey(_ + " " + _)
 
     val swords = stweets.union(nsTweets).flatMap(f => f._2.split(" ")).map(e => (e, 1)).reduceByKey(_ + _)

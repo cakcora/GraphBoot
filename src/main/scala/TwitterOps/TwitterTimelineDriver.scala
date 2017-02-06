@@ -21,7 +21,7 @@ object TwitterTimelineDriver {
   def main(args: Array[String]) {
 
     val cb = new ConfigurationBuilder()
-    val cre = Credent.getApp(1)
+    val cre = Credent.getApp(0)
     cb.setDebugEnabled(true)
       .setOAuthConsumerKey(cre.apiKey)
       .setOAuthConsumerSecret(cre.apiSecret)
@@ -33,14 +33,15 @@ object TwitterTimelineDriver {
 
     val filename: String = "userinfo.txt"
     val file2name = "timeline.txt"
-    val nextList: Set[String] = getNextSet(filename, file2name)
-
+    val seeds: Set[String] = Source.fromFile("seedList.txt").getLines().toSet
+    val nextList: Set[String] = getNext(filename, file2name, seeds, wave = 1)
     var count = 0;
     val rate = 900
     val window: Int = 15
     val fw = new FileWriter(file2name, true)
     var nextTime = System.currentTimeMillis() + window * 60 * 1000
-
+    var sofar = 0
+    println("will download " + nextList.size)
     for (user <- nextList) {
       count = (count + 1) % (rate + 1)
       if (count == 0) {
@@ -51,14 +52,15 @@ object TwitterTimelineDriver {
         nextTime = System.currentTimeMillis() + window * 60 * 1000
         count = 1
       }
-      println("Using resource " + count + " for " + user + " at time " + System.currentTimeMillis() / 1000)
-
+      sofar += 1
+      //if(sofar%450==0)
       try {
         val se: mutable.Buffer[Status] = getTimeLine(twitter, user)
         se.foreach(e => fw.append(e.toString + "\r\n"))
         fw.flush()
+        println("Using resource " + count + " for " + user + " at time " + System.currentTimeMillis() / 1000)
       } catch {
-        case e: Exception => println(e.getMessage)
+        case e: Exception => println(user + " " + e.getLocalizedMessage)
       } finally {}
 
     }
@@ -92,12 +94,22 @@ object TwitterTimelineDriver {
     return se
   }
 
-  def getNextSet(frFiName: String, tiFiName: String): Set[String] = {
-    val f1 = Source.fromFile(frFiName).getLines().toArray
-    val f2 = Source.fromFile(tiFiName).getLines().toArray
+  def getNext(filename: String, file2name: String, seeds: Set[String], wave: Int): Set[String] = {
+    //    println("searching with "+seeds.size)
+    val f1 = Source.fromFile(filename).getLines().toArray.filter(e => seeds.contains(e.split("\t")(0))).map(e => e.split("\t")(1)).toSet
 
-    val tobeFound = f1.map(e => e.split("\t")(1)).toSet.diff(f2.map(e => e.split("\t")(0)).toSet)
-    tobeFound
+
+    if (wave < 1) {
+
+      return getNext(filename, file2name, f1, wave + 1)
+    }
+    else {
+      val f2 = Source.fromFile(file2name).getLines().toArray.map(e => e.split("\t")(0)).toSet
+
+      val tobeFound = f1.diff(f2)
+      //      println(wave+", "+tobeFound.size+" are found")
+      return tobeFound
+    }
   }
 }
 
