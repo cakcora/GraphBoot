@@ -51,7 +51,8 @@ object LocationHandler {
     val illLocs2beFound: Set[String] = illLocs.diff(existing.keySet)
     val wellLocs2beFound: Set[String] = wellLocs.diff(existing.keySet)
     println(illLocs2beFound.size + " unique ill locs to be found, already have " + existing.size)
-    val fetch = false
+    println(wellLocs2beFound.size + " unique well locs to be found.")
+    val fetch = true
     val buf: ArrayBuffer[(String, String)] = if (fetch) findMissingLocations(locFile, illLocs2beFound) else ArrayBuffer.empty[(String, String)]
 
     buf.appendAll(existing)
@@ -74,7 +75,7 @@ object LocationHandler {
   def findMissingLocations(locFile: String, locs2beFound: Set[String]): ArrayBuffer[(String, String)] = {
     val locWriter = new FileWriter(locFile, true)
     val buf = mutable.ArrayBuffer.empty[(String, String)]
-    for (row <- locs2beFound.take(1800)) {
+    for (row <- locs2beFound.take(500)) {
       val address = row
       try {
 

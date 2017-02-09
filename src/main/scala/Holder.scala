@@ -75,6 +75,7 @@ object Holder {
 
     val model = pipeline.fit(trainingData)
     model.explainParams()
+    println("Learned a model.")
     // Make predictions.
     val predictions = model.transform(testData)
     val ow = new FileWriter(ClassifierData.predResultFile)
@@ -93,7 +94,6 @@ object Holder {
   }
 
   def getProfiles(sc: SparkContext, nextUsers: Set[String]): RDD[(String, String)] = {
-
 
     val tweetFile: List[(String, String)] = Source.fromFile(ClassifierData.tweetFile).getLines().map(e => {
       val arr = e.split("\t")

@@ -22,7 +22,7 @@ object ClassifierData {
   val tweetFile = "timeline.txt"
   val stopFile = "terrier-stop.txt"
   val predResultFile: String = "resultPreds.txt"
-  val seeds: Set[String] = Source.fromFile("seedList.txt").getLines().toSet
+  val seeds: Set[String] = Source.fromFile("data/seedList.txt").getLines().toSet
   def getMinWordLength(): Int = return minWordLength
 
   def getMinWordCount(): Int = return minWordCount
