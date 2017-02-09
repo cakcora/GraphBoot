@@ -28,7 +28,7 @@ object ExperimentDriverRMatNetworks {
       println(" iter " + cv)
 
 
-      for (edgeDensity <- List(5, 10, 20, 40, 80)) {
+      for (edgeDensity <- List(5, 10, 20, 40)) {
 
         val grOptions: Map[String, AnyVal] = Map(("vertices", 100000), ("edgeDensity", edgeDensity))
         val graph: Graph[Int, Int] = DataLoader.load(sc, networkName, grOptions)

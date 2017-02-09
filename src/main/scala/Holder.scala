@@ -20,6 +20,7 @@ object Holder {
 
   var testLabel: Int = 2
 
+
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
       .builder
@@ -29,82 +30,60 @@ object Holder {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
-    val wave1Profile: Array[(String, String)] = getWave1Profile(sc, ClassifierData.getSeeds()).collect()
+    val seeds: Set[String] = ClassifierData.getSeeds()
+    val nextUsers: Set[String] = getFriendsOf(seeds).filter(e => !seeds.contains(e))
+    val nextNextUsers: Set[String] = getFriendsOf(nextUsers)
+    val wave1Profiles: Array[(String, String)] = getProfiles(sc, nextNextUsers).collect()
     val inputFileForClasification: String = "inputTemp.txt"
-    val wave0Profile = Source.fromFile(ClassifierData.outFile).getLines()
+    val wave0Profiles = Source.fromFile(ClassifierData.outFile).getLines()
     val inputFileHandle = new FileWriter(inputFileForClasification);
-    for (n <- wave0Profile) {
+    for (n <- wave0Profiles) {
       inputFileHandle.append(n + "\r\n");
     }
     val idMap = mutable.HashMap.empty[Int, String]
-    var givenId = 10
-    for (userProfile <- wave1Profile) {
-      inputFileHandle.append(givenId + " " + userProfile._2 + "\r\n");
-      idMap(givenId) = userProfile._1
-      givenId += 1
+    var assignedId = 10 //ids start from 10
+    for (userProfile <- wave1Profiles) {
+      inputFileHandle.append(assignedId + " " + userProfile._2 + "\r\n");
+      idMap(assignedId) = userProfile._1
+      assignedId += 1
     }
     inputFileHandle.close();
     val data = spark.read.format("libsvm").load(inputFileForClasification)
-
-
-
-    // Index labels, adding metadata to the label column.
-    // Fit on whole dataset to include all labels in index.
-
 
     val labelIndexer = new StringIndexer()
       .setInputCol("label")
       .setOutputCol("indexedLabel")
       .fit(data)
-
-
-    // Automatically identify categorical features, and index them.
-    // Set maxCategories so features with > 4 distinct values are treated as continuous.
     val featureIndexer = new VectorIndexer()
       .setInputCol("features")
       .setOutputCol("indexedFeatures")
       .setMaxCategories(4)
       .fit(data)
-
-
-    // Split the data into training and test sets (30% held out for testing).
-    //val Array(trainingData, testData) = data.randomSplit(Array(0.7, 0.3))
     val trainingData: Dataset[Row] = data.filter(e => e.get(0) == 1 || e.get(0) == 0)
     val testData: Dataset[Row] = data.filter(e => e.get(0) != 1 && e.get(0) != 0)
     println("Training on " + trainingData.count() + " testing on :" + testData.count())
-    // Train a RandomForest model.
     val rf = new RandomForestClassifier()
       .setLabelCol("indexedLabel")
       .setFeaturesCol("indexedFeatures")
       .setNumTrees(10)
-
-    // Convert indexed labels back to original labels.
     val labelConverter = new IndexToString()
       .setInputCol("prediction")
       .setOutputCol("predictedLabel")
       .setLabels(labelIndexer.labels)
-
-    // Chain indexers and forest in a Pipeline.
     val pipeline = new Pipeline()
       .setStages(Array(labelIndexer, featureIndexer, rf, labelConverter))
 
     val model = pipeline.fit(trainingData)
-
+    model.explainParams()
     // Make predictions.
     val predictions = model.transform(testData)
     val ow = new FileWriter(ClassifierData.predResultFile)
     savePredictionsToFile(idMap, predictions, ow)
-
-
   }
 
   def savePredictionsToFile(idMap: mutable.HashMap[Int, String], predictions: DataFrame, ow: FileWriter): Unit = {
-    val preds: Array[Row] = predictions.rdd.collect()
-
-    predictions.printSchema()
-    println(predictions.first().getAs[Double]("label"))
+    val preds: Array[Row] = predictions.select("label", "predictedLabel").rdd.collect()
     for (row <- preds) {
-
       val lb = idMap(row.getAs[Double]("label").toInt)
       val pl = row.getAs[String]("predictedLabel")
 
@@ -113,12 +92,8 @@ object Holder {
     ow.close
   }
 
-  def getWave1Profile(sc: SparkContext, seeds: Set[String]): RDD[(String, String)] = {
-    val infoFile: List[(String, String)] = Source.fromFile(ClassifierData.infoFile).getLines().map(e => {
-      val arr = e.split("\t")
-      (arr(0), arr(1))
-    }).toList
-    val nextUsers: List[String] = infoFile.filter(e => seeds.contains(e._1)).map(e => e._2).filter(e => !seeds.contains(e))
+  def getProfiles(sc: SparkContext, nextUsers: Set[String]): RDD[(String, String)] = {
+
 
     val tweetFile: List[(String, String)] = Source.fromFile(ClassifierData.tweetFile).getLines().map(e => {
       val arr = e.split("\t")
@@ -157,4 +132,12 @@ object Holder {
   }
 
 
+  def getFriendsOf(users: Set[String]): Set[String] = {
+    val infoFile: List[(String, String)] = Source.fromFile(ClassifierData.infoFile).getLines().map(e => {
+      val arr = e.split("\t")
+      (arr(0), arr(1))
+    }).toList
+    val friends: Set[String] = infoFile.filter(e => users.contains(e._1)).map(e => e._2).toSet
+    friends
+  }
 }
