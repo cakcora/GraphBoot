@@ -99,7 +99,7 @@ object TwitterTimelineDriver {
     val f1 = Source.fromFile(filename).getLines().toArray.filter(e => seeds.contains(e.split("\t")(0))).map(e => e.split("\t")(1)).toSet
 
 
-    if (wave < 1) {
+    if (wave < 2) {
 
       return getNext(filename, file2name, f1, wave + 1)
     }
