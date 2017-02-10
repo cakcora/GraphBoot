@@ -18,7 +18,6 @@ object LMSI {
     val weightedGraph: Graph[Int, Int] = Common.weightVertices(graph)
     val initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
     val gr: Graph[Int, Int] = Common.subgraphWithWave(initialGraph, wave)
-    //    println(gr.numVertices + " vertices " + gr.numEdges + " edges")
     val kAll: RDD[(VertexId, Int, VertexId, Int, Int)] =
       gr.triplets.map(e => (e.srcId, e.srcAttr, e.dstId, e.dstAttr, if (e.srcAttr <= e.dstAttr) 1 + e.srcAttr else 1 + e.dstAttr))
 
@@ -65,33 +64,6 @@ object LMSI {
     outputList
   }
 
-  def sequentialLMSI(sc: SparkContext, graph: Graph[Int, Int], seedArray: Array[(VertexId, Int)], wave: Int): List[Int] = {
-    val seeds = sc.makeRDD(seedArray)
-    val seedList = seeds.map(e => e._1.toInt).collect().toList
-    val weightedGraph: Graph[Int, Int] = Common.weightVertices(graph)
-    val initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
-    val fut: Future[List[List[Int]]] = Future.traverse(seedList) { i =>
-      val localEdges: RDD[Edge[Int]] = Common.findWaveEdges(initialGraph, i, wave)
-      Future {
-        LMSI.singleSeed(localEdges, i, wave)
-      }
-    }
-    Await.result(fut, Duration.Inf).flatten
-  }
-
-  def singleSeed(edgeRDD: RDD[Edge[Int]], seed: Int, wave: Int): List[Int] = {
-
-    val edges: ListBuffer[(Int, Int)] = edgeRDD.map(e => (e.srcId.toInt, e.dstId.toInt)).collect().to[ListBuffer]
-
-    val seenVertices: mutable.HashSet[Int] = new mutable.HashSet[Int]()
-    val initialVertexList: ListBuffer[Int] = new ListBuffer[Int]()
-    initialVertexList.append(seed)
-    seenVertices.add(seed)
-
-    val outputList = lmsiAlgorithm(wave, edges, seenVertices, initialVertexList)
-    outputList
-  }
-
   def lmsiAlgorithm(wave: Int, remainingEdges: ListBuffer[(Int, Int)], seenVertices: mutable.HashSet[Int], outputVertexList: ListBuffer[Int]): List[Int] = {
     var w = 0;
     while (!remainingEdges.isEmpty && w < wave) {
@@ -124,5 +96,32 @@ object LMSI {
       remainingEdges --= rList
     }
     outputVertexList.toList
+  }
+
+  def sequentialLMSI(sc: SparkContext, graph: Graph[Int, Int], seedArray: Array[(VertexId, Int)], wave: Int): List[Int] = {
+    val seeds = sc.makeRDD(seedArray)
+    val seedList = seeds.map(e => e._1.toInt).collect().toList
+    val weightedGraph: Graph[Int, Int] = Common.weightVertices(graph)
+    val initialGraph = weightedGraph.joinVertices(seeds)((x, c, v) => Math.min(c, v))
+    val fut: Future[List[List[Int]]] = Future.traverse(seedList) { i =>
+      val localEdges: RDD[Edge[Int]] = Common.findWaveEdges(initialGraph, i, wave)
+      Future {
+        LMSI.singleSeed(localEdges, i, wave)
+      }
+    }
+    Await.result(fut, Duration.Inf).flatten
+  }
+
+  def singleSeed(edgeRDD: RDD[Edge[Int]], seed: Int, wave: Int): List[Int] = {
+
+    val edges: ListBuffer[(Int, Int)] = edgeRDD.map(e => (e.srcId.toInt, e.dstId.toInt)).collect().to[ListBuffer]
+
+    val seenVertices: mutable.HashSet[Int] = new mutable.HashSet[Int]()
+    val initialVertexList: ListBuffer[Int] = new ListBuffer[Int]()
+    initialVertexList.append(seed)
+    seenVertices.add(seed)
+
+    val outputList = lmsiAlgorithm(wave, edges, seenVertices, initialVertexList)
+    outputList
   }
 }

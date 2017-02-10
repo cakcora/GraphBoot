@@ -93,7 +93,7 @@ object Holder {
     ow.close
   }
 
-  def getProfiles(sc: SparkContext, nextUsers: Set[String]): RDD[(String, String)] = {
+  def getProfiles(sc: SparkContext, nextUsers: Set[String], returnRawProfiles: Boolean = true): RDD[(String, String)] = {
 
     val tweetFile: List[(String, String)] = Source.fromFile(ClassifierData.tweetFile).getLines().map(e => {
       val arr = e.split("\t")
@@ -101,8 +101,12 @@ object Holder {
     }).toList
     val nextTweets: List[(String, String)] = tweetFile.filter(e => nextUsers.contains(e._1)).map(e => (e._1, e._2))
     val stops: Set[String] = Source.fromFile(ClassifierData.stopFile).getLines().map(r => r.toString).toSet
-    val tweets: Array[(String, String)] = sc.makeRDD(nextTweets).map(e => (e._1, ClassifierData.clean(e._2, stops, ClassifierData.getMinWordLength()))).reduceByKey(_ + " " + _).collect()
-    println(tweets.length + " users' tweets have been found.")
+    val tw: RDD[(String, String)] = sc.makeRDD(nextTweets)
+
+    if (returnRawProfiles) return tw.reduceByKey(_ + " " + _)
+
+    val tweets: Array[(String, String)] = tw.map(e => (e._1, ClassifierData.clean(e._2, stops, ClassifierData.getMinWordLength()))).reduceByKey(_ + " " + _).collect()
+
     val wordIds = Source.fromFile(ClassifierData.fwFile).getLines().map(e => e.split(":")).map(e => (e(0), e(1).toInt)).toMap
     val buf = scala.collection.mutable.ListBuffer.empty[(String, String)]
     var ignored = 0

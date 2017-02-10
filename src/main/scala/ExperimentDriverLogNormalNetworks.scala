@@ -47,8 +47,6 @@ object ExperimentDriverLogNormalNetworks {
 
         }
       }
-
-
     }
     fw.close()
   }

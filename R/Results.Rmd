@@ -41,23 +41,29 @@ o5<-vis(resultFolder,"expwiki" ,"Wiki")
 o51<-vis(resultFolder,"expwikiDirected" ,"WikiD")
 
 df<-data.frame(o1)
-df<-rbind(df,o11)
+#df<-rbind(df,o11)
 df<-rbind(df,o2)
 df<-rbind(df,o3)
 df<-rbind(df,o4)
-df<-rbind(df,o41)
+#df<-rbind(df,o41)
 df<-rbind(df,o5)
-df<-rbind(df,o51)
+#df<-rbind(df,o51)
 lt<-c(1, 2,3, 4,5,6,7,8)
 
-m11<-ggplot(df, aes(x=seed,y =V1, color=dataset, group=dataset)) + geom_line(size=2)+scale_y_continuous(limits=c(0,1.6),name=expression(paste(bar(x)," / ",mu))) +theme(legend.position = c(0.8, 0.8),text = element_text(size=16))#+scale_color_manual(values=lt) 
-m11 
-m12<-ggplot(df, aes(x=seed,y =V2, color=dataset, group=dataset)) + geom_line(size=2)+scale_y_continuous(limits=c(0,1),name=expression("Variance in bootstrap")) +theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_linetype_manual(values=lt) 
-m12
+m11<-ggplot(df, aes(x=seed,y =V1, color=dataset, group=dataset))   
+m11<-m11+ geom_line(size=2)+scale_y_continuous(limits=c(0,1.6),name=expression(paste(bar(x)," / ",mu)))
+m11<-m11+ theme(legend.position = c(0.8, 0.8),text = element_text(size=16)) 
+m11<-m11+ geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4)) 
+m11
 
+m12<-ggplot(df, aes(x=seed,y =V2, color=dataset, group=dataset)) 
+m12<-m12+ geom_line(size=2)+scale_y_log10(name=expression("Variance in bootstraps"))  
+m12<-m12+ theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_linetype_manual(values=lt)
+m12<-m12+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4)) 
+m12
  
 
-ggsave(filename=paste(resultFolder,"results.eps",sep=""),plot=m11,width=6,height=4,unit="in")
+ggsave(filename=paste(resultFolder,"figs/results.eps",sep=""),plot=m11,width=6,height=4,unit="in")
 
 ```
 

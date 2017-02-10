@@ -96,7 +96,6 @@ object GraphBoot {
       }
       //add avg degree from this bootstrap
       bstrapDegrees += avgDegree
-      //      println(avgDegree + " " + kNonSeedMap)
     }
     bstrapDegrees.toList
   }
@@ -110,7 +109,6 @@ object GraphBoot {
     for (v <- candidateList) {
       val j = (1000 * (1.0 / degrees(v))).toInt
       if (degrees(v) != 0 && j < 1) {
-        //println("illegal state " + degrees(v))
         probs += Tuple2(v, inter + 1)
         // assigning a prob of 1 to nodes with degree>1000
         inter += 1
@@ -120,6 +118,7 @@ object GraphBoot {
         inter += j
       }
     }
+
     return (probs)
   }
 
