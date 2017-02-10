@@ -1,0 +1,41 @@
+---
+title: "GraphBoot"
+output: html_notebook
+---
+
+Finds avg coverage of dataset for 10 seeds. 
+
+```{r}
+require(plyr)
+require(ggplot2)
+
+
+rm(list=ls(all=TRUE))
+
+vis<-function(inputFolder,dataset){
+  
+  dataFrame <-(read.csv(paste(inputFolder,"exp",dataset,".txt",sep=""),sep="\t",header=T))
+  effect <- ddply(dataFrame,.(seed),summarise,V1=mean(lmsiDistinct),V2=mean(lmsiAll))
+  effect<-cbind(effect,dataset) 
+  return(effect)
+   
+}
+resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/"
+data<-data.frame()
+data<- vis(resultFolder,"Facebook")
+data<-rbind(data,vis(resultFolder,"Enron"))
+ data<-rbind(data,vis(resultFolder,"Dblp"))
+ data<-rbind(data,vis(resultFolder,"Epinions"))
+ data<-rbind(data,vis(resultFolder,"Wiki"))
+
+m12<- ggplot(data,aes(x=seed,y=V1,color=dataset,group=dataset))+scale_x_continuous(name="seed")+theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_y_sqrt(name="fraction of nodes")
+m12<-m12+geom_line(size=1)+geom_point(aes(shape=dataset), size=2) +scale_shape_manual(values=c(0,1,2,3,4))
+m12
+ggsave(filename=paste(resultFolder,"figs/coverage.eps",sep=""),plot=m12,width=6,height=4,unit="in")
+data[data$seed==10,] 
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
