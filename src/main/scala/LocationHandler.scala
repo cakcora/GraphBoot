@@ -9,26 +9,33 @@ import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.util.parsing.json.JSON
 
+
 /**
   * Created by cxa123230 on 1/23/2017.
-  * Experiment 2. Requires results from Holder experiments
+  * Experiment 2. Requires results from Holder.scala experiments
   */
 object LocationHandler {
 
   Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
   Logger.getLogger("org.apache.spark.storage.BlockManager").setLevel(Level.ERROR)
+  val outFile = new FileWriter("C:/Users/cxa123230/Dropbox/Publications/PostDoc work/GraphBoot/validation data/2015GB.txt")
+  val predFile: String = "results/classified/1resultPredsAll.txt"
+  val locFile: String = "results/data/existingLocs.txt"
+  val abbFile: String = "C:/Users/cxa123230/Dropbox/Publications/PostDoc work/GraphBoot/validation data/stateAbb.txt"
+  private val apiFile: String = "results/data/apikey.txt"
+
 
   def main(args: Array[String]): Unit = {
+
     val spark = SparkSession
       .builder
       .appName("graphboot")
       .master("local[16]")
       .getOrCreate()
-
     val sc = spark.sparkContext
-    val key = Source.fromFile("apikey.txt").getLines().toList(0).toString
 
-    val users = Source.fromFile("C:/Users/cxa123230/IdeaProjects/GraphBoot/" + "resultpreds.txt").getLines()
+    val key = Source.fromFile(apiFile).getLines().toList(0).toString
+    val users = Source.fromFile(predFile).getLines()
     val allusers: List[Array[String]] = users.map(e => e.split("\t")).toList
     val illUsers: Set[String] = allusers.filter(e => e(1) != "0.0").map(e => e(0)).toSet
     val wellUsers: Set[String] = allusers.filter(e => e(1).toDouble == 0.0).map(e => e(0)).toSet
@@ -39,13 +46,13 @@ object LocationHandler {
     println("we have discovered information on " + allUsersAndLocations.size + " users.")
     val illUsersAndLocs: Map[String, String] = allUsersAndLocations.filter(e => illUsers.contains(e._1)).filter(e => e._2.length > 2).map(e => (e._1, e._2.toLowerCase)).toMap
     val wellUsersAndLocs: Map[String, String] = allUsersAndLocations.filter(e => wellUsers.contains(e._1)).filter(e => e._2.length > 2).map(e => (e._1, e._2.toLowerCase)).toMap
-    println(wellUsersAndLocs.size + " users' locations found.")
-
+    println(wellUsersAndLocs.size + " well users' locations found.")
+    println(illUsersAndLocs.size + " ill users' locations found.")
     val illLocs: Set[String] = illUsersAndLocs.map(e => e._2.toLowerCase()).toSet
-    println(illLocs.size + " ill locations found.")
+    println(illLocs.size + " unique ill locations found.")
     val wellLocs: Set[String] = wellUsersAndLocs.map(e => e._2.toLowerCase()).toSet
-    println(wellLocs.size + " well locations found.")
-    val locFile: String = "existingLocs.txt"
+    println(wellLocs.size + " unique well locations found.")
+
 
     val existing: Map[String, String] = findExistingLocations(locFile)
     val illLocs2beFound: Set[String] = illLocs.diff(existing.keySet)
@@ -53,7 +60,7 @@ object LocationHandler {
     println(illLocs2beFound.size + " unique ill locs to be found, already have " + existing.size)
     println(wellLocs2beFound.size + " unique well locs to be found.")
     val fetch = true
-    val buf: ArrayBuffer[(String, String)] = if (fetch) findMissingLocations(locFile, illLocs2beFound) else ArrayBuffer.empty[(String, String)]
+    val buf: ArrayBuffer[(String, String)] = if (fetch) findMissingLocations(locFile, illLocs2beFound, key) else ArrayBuffer.empty[(String, String)]
 
     buf.appendAll(existing)
     val idMap = buf.toMap[String, String]
@@ -61,7 +68,6 @@ object LocationHandler {
     val wellMapVals: mutable.Map[String, Int] = getStateDistribution(wellUsersAndLocs, idMap)
     printStateDistribution(illMapVals, wellMapVals)
   }
-
 
   def findExistingLocations(locFile: String): (Map[String, String]) = {
 
@@ -72,14 +78,14 @@ object LocationHandler {
     (existing)
   }
 
-  def findMissingLocations(locFile: String, locs2beFound: Set[String]): ArrayBuffer[(String, String)] = {
+  def findMissingLocations(locFile: String, locs2beFound: Set[String], key: String): ArrayBuffer[(String, String)] = {
     val locWriter = new FileWriter(locFile, true)
     val buf = mutable.ArrayBuffer.empty[(String, String)]
-    for (row <- locs2beFound.take(500)) {
+    for (row <- locs2beFound.take(2500)) {
       val address = row
       try {
 
-        val country: String = getLoc(address)
+        val country: String = getLoc(address, key)
         locWriter.append(address + "\t" + country + "\r\n")
         buf.append((address, country))
       } catch {
@@ -95,11 +101,11 @@ object LocationHandler {
     buf
   }
 
-  def getLoc(addr: String): String = {
+  def getLoc(addr: String, key: String): String = {
     val invalid: String = "invalid"
     if (addr.length == 0) return invalid
     val address = URIUtil.encodeQuery(addr)
-    val key = Source.fromFile("apikey.txt").getLines().toList(0).toString
+
     val result = get("https://maps.googleapis.com/maps/api/geocode/json?address=" + address + "&sensor=false&key=" + key).mkString
 
     val parsed = JSON.parseFull(result)
@@ -113,9 +119,8 @@ object LocationHandler {
   }
 
   def get(url: String) = scala.io.Source.fromURL(url)
-
   def getStateDistribution(usersAndLocs: Map[String, String], idMap: Map[String, String]): mutable.Map[String, Int] = {
-    val abs: Map[String, String] = Source.fromFile("C:/Users/cxa123230/Dropbox/Publications/PostDoc work/GraphBoot/validation data/stateAbb.txt").getLines().map(e => (e.split("\t")(1).toLowerCase(), e.split("\t")(0).toLowerCase())).toMap
+    val abs: Map[String, String] = Source.fromFile(abbFile).getLines().map(e => (e.split("\t")(1).toLowerCase(), e.split("\t")(0).toLowerCase())).toMap
     val mapVals: mutable.Map[String, Int] = mutable.HashMap.empty[String, Int].withDefaultValue(0)
     for (row <- usersAndLocs) {
       val usr = row._1
@@ -134,7 +139,7 @@ object LocationHandler {
   }
 
   def printStateDistribution(illStateMap: mutable.Map[String, Int], wellStateMap: mutable.Map[String, Int]): Unit = {
-    val outFile = new FileWriter("C:/Users/cxa123230/Dropbox/Publications/PostDoc work/GraphBoot/validation data/2015GB.txt")
+
     outFile.append("region\tor18\twell\r\n")
     for (v <- illStateMap.keySet.union(wellStateMap.keySet)) {
       val loc = v

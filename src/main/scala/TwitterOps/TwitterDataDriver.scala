@@ -20,29 +20,47 @@ object TwitterDataDriver {
   Logger.getLogger("org.apache.spark.storage.BlockManager").setLevel(Level.ERROR)
 
 
-
-
   def main(args: Array[String]) {
 
     val cb = new ConfigurationBuilder()
+    val cre = Credent.getApp(1)
     cb.setDebugEnabled(true)
-      .setOAuthConsumerKey(Credent.apiKey)
-      .setOAuthConsumerSecret(Credent.apiSecret)
-      .setOAuthAccessToken(Credent.accessToken)
-      .setOAuthAccessTokenSecret(Credent.accessTokenSecret)
+      .setOAuthConsumerKey(cre.apiKey)
+      .setOAuthConsumerSecret(cre.apiSecret)
+      .setOAuthAccessToken(cre.accessToken)
+      .setOAuthAccessTokenSecret(cre.accessTokenSecret)
     val tf = new TwitterFactory(cb.build())
     val twitter = tf.getInstance()
+    val dir = "C:/Users/cxa123230/IdeaProjects/GraphBoot/"
+    val seeds: Set[String] = Source.fromFile(dir + "data/seedList.txt").getLines().toSet
 
-    val seeds: Set[String] = Source.fromFile("seedList.txt").getLines().toSet
+    val infoFile: String = "userinfo.txt"
+    val filename: String = dir + infoFile
+    val friends: Set[String] = getFriends(filename, seeds)
+    println(friends.size + " friends")
+    val nextNextList: Set[String] = getFriends(filename, friends)
+    println(nextNextList.size + " friends of friends.")
+    val predResultFile: String = dir + "resultPreds.txt"
+    val fs: List[Array[String]] = Source.fromFile(predResultFile).getLines().toList.map(e => e.split("\t"))
+    println(fs.size + " labeled users, either depressed or not.")
 
-    val filename: String = "userinfo.txt"
-    val nextList: Set[String] = getNextSet(filename, seeds)
+    val f1: Set[Array[String]] = fs.filter(f => f(1) == "1.0").toSet
+    println(f1.size + " total depressed users")
+    val f2 = f1.filter(f => nextNextList.contains(f(0)))
+    val dp: Set[String] = f2.map(e => e(0))
+
+    println(dp.size + " depressed users' friends will be found.")
+    val have: Set[String] = Source.fromFile(dir + infoFile).getLines().map(e => e.split("\t")).map(e => e(0)).toSet
+    println(have.size + " users' friends already exists.")
+    val tobeFound = dp.diff(have)
+    println(tobeFound.size + " to be found;")
+
     val fw = new FileWriter(filename, true)
     var count = 0;
     val rate = 15
     var nextTime = System.currentTimeMillis() + rate * 60 * 1000
-    var remains = nextList.size
-    for (seed <- nextList) {
+    var remains = tobeFound.size
+    for (seed <- tobeFound) {
       count = (count + 1) % (rate + 1)
       if (count == 0) {
         while (nextTime > System.currentTimeMillis()) {
@@ -97,7 +115,7 @@ object TwitterDataDriver {
     return se
   }
 
-  def getNextSet(fileName: String, seeds: Set[String]): Set[String] = {
+  def getFriends(fileName: String, seeds: Set[String]): Set[String] = {
     val f = Source.fromFile(fileName).getLines().toArray.filter(e => seeds.contains(e.split("\t")(0)))
     val tobeFound = f.map(e => e.split("\t")(1)).toSet.diff(f.map(e => e.split("\t")(0)).toSet)
     tobeFound

@@ -26,7 +26,7 @@ object ExperimentDriverLogNormalNetworks {
     val wave = 2
     for (cv <- 1 to 50) {
       println(" iter " + cv)
-      for (sigma <- (0 to 20 by 4).map(e => Math.round(e * 10.0) / 100.0)) {
+      for (sigma <- (0 to 16 by 4).map(e => Math.round(e * 10.0) / 100.0)) {
         //for (mu <- (10 to 42 by 4).map(e => Math.round(e * 10.0) / 100.0))
         {
           val mu = 3.0

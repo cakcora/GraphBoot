@@ -13,13 +13,16 @@ import scala.io.Source
 
 /**
   * Created by cxa123230 on 2/2/2017.
+  * requires data output from Classifier.Data
   */
 object Holder {
   Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
   Logger.getLogger("org.apache.spark.storage.BlockManager").setLevel(Level.ERROR)
 
+  val featureFile: String = "results/classified/1featureWords.txt"
+  val inputFile: String = "results/classified/1inputGB.txt"
+  val prevPred: String = "results/classified/0resultPredsall.txt"
   var testLabel: Int = 2
-
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
@@ -31,23 +34,34 @@ object Holder {
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
     val seeds: Set[String] = ClassifierData.getSeeds()
-    val nextUsers: Set[String] = getFriendsOf(seeds).filter(e => !seeds.contains(e))
-    val nextNextUsers: Set[String] = getFriendsOf(nextUsers)
-    val wave1Profiles: Array[(String, String)] = getProfiles(sc, nextNextUsers).collect()
+    println(seeds.size + " seeds")
+    val wave1: Set[String] = getFriendsOf(seeds).diff(seeds)
+    println(wave1.size + " friends of seeds.")
+    val prevLabels = Source.fromFile(prevPred).getLines().toList
+    val prevDepusers: Set[String] = prevLabels.map(e => e.split("\t")).filter(f => f(1) == "1.0").map(e => e(0)).toSet
+    println(prevDepusers.size + " depressed users from previous labeling. This includes waves one and two")
+    val wave1AndDepressed: Set[String] = wave1 //.intersect(prevDepusers)
+    println(wave1AndDepressed.size + " wave one users were found to be depressed.")
+    val wave2: Set[String] = getFriendsOf(wave1AndDepressed).diff(wave1).diff(seeds)
+    println(wave2.size + " new wave two users found will be classified")
+    val wave2Profiles: Array[(String, String)] = getProfiles(sc, wave2).collect()
+    println(wave2Profiles.size + " profiles of these new wave two users were found.")
+
     val inputFileForClasification: String = "inputTemp.txt"
-    val wave0Profiles = Source.fromFile(ClassifierData.outFile).getLines()
-    val inputFileHandle = new FileWriter(inputFileForClasification);
-    for (n <- wave0Profiles) {
-      inputFileHandle.append(n + "\r\n");
+    val labeledData = Source.fromFile(inputFile).getLines().toList
+    val tempFile = new FileWriter(inputFileForClasification);
+    println(labeledData.size + " labeled data found.")
+    for (n <- labeledData) {
+      tempFile.append(n + "\r\n");
     }
     val idMap = mutable.HashMap.empty[Int, String]
     var assignedId = 10 //ids start from 10
-    for (userProfile <- wave1Profiles) {
-      inputFileHandle.append(assignedId + " " + userProfile._2 + "\r\n");
+    for (userProfile <- wave2Profiles) {
+      tempFile.append(assignedId + " " + userProfile._2 + "\r\n");
       idMap(assignedId) = userProfile._1
       assignedId += 1
     }
-    inputFileHandle.close();
+    tempFile.close();
     val data = spark.read.format("libsvm").load(inputFileForClasification)
 
     val labelIndexer = new StringIndexer()
@@ -93,7 +107,7 @@ object Holder {
     ow.close
   }
 
-  def getProfiles(sc: SparkContext, nextUsers: Set[String], returnRawProfiles: Boolean = true): RDD[(String, String)] = {
+  def getProfiles(sc: SparkContext, nextUsers: Set[String], returnRawProfiles: Boolean = false): RDD[(String, String)] = {
 
     val tweetFile: List[(String, String)] = Source.fromFile(ClassifierData.tweetFile).getLines().map(e => {
       val arr = e.split("\t")
@@ -107,7 +121,8 @@ object Holder {
 
     val tweets: Array[(String, String)] = tw.map(e => (e._1, ClassifierData.clean(e._2, stops, ClassifierData.getMinWordLength()))).reduceByKey(_ + " " + _).collect()
 
-    val wordIds = Source.fromFile(ClassifierData.fwFile).getLines().map(e => e.split(":")).map(e => (e(0), e(1).toInt)).toMap
+
+    val wordIds = Source.fromFile(featureFile).getLines().map(e => e.split(":")).map(e => (e(0), e(1).toInt)).toMap
     val buf = scala.collection.mutable.ListBuffer.empty[(String, String)]
     var ignored = 0
     for (row <- tweets) {

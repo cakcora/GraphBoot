@@ -9,12 +9,12 @@ import scala.io.Source
 
 /**
   * Created by cxa123230 on 2/8/2017.
-  * Experiment 3. Requires results from Holder experiments
+  * Experiment 3. Requires results from Holder.scala experiments
   */
 object StatisticHandler {
   Logger.getLogger("org.apache.spark").setLevel(Level.ERROR)
   Logger.getLogger("org.apache.spark.storage.BlockManager").setLevel(Level.ERROR)
-
+  val predResultFile: String = "results/classified/1resultPredsAll.txt"
 
   val symptomWords = List("anxiety", "withdrawal", "severe", "delusions", "adhd", "weight", "insomnia", "drowsiness", "suicidal", "appetite", "dizziness", "nausea", "episodes", "attacks", "sleep", "seizures", "addictive", "weaned", "swings", "dysfunction", "blurred", "irritability", "headache", "fatigue", "imbalance", "nervousness", "psychosis", "drowsy")
   val disclosureWords = List("fun", "play", "helped", "god", "answer", "wants", "leave", "beautiful", "suffer", "sorry", "tolerance", "agree", "hate", "helpful", "haha", "enjoy", "social", "talk", "save", "win", "care", "love", "like", "hold", "cope", "amazing", "discuss")
@@ -38,7 +38,8 @@ object StatisticHandler {
     val usedWords = words(dataset)
     println(seeds.size + " seeds are used.")
 
-    val dp: Set[String] = Source.fromFile(ClassifierData.predResultFile).getLines().map(e => e.split("\t")).filter(f => f(1) == "1.0").map(e => e(0)).toSet
+
+    val dp: Set[String] = Source.fromFile(predResultFile).getLines().map(e => e.split("\t")).filter(f => f(1) == "1.0").map(e => e(0)).toSet
     val depressedUsers: Set[String] = dp.union(seeds)
     println(depressedUsers.size + " depressed users' names were found.")
     val edges: Set[(String, String)] = Source.fromFile(ClassifierData.infoFile).getLines().map(e => {
@@ -80,13 +81,10 @@ object StatisticHandler {
 
     println(degreeMap.size + " users degrees found")
     val graph: Graph[Int, Int] = Graph.fromEdgeTuples(sc.makeRDD(edgeSet), defaultValue = 0)
-    val d: Array[Int] = graph.vertices.collect().map(e => e._1.toInt)
-    val d2 = d.diff(degreeMap.keySet.toSeq)
-    println("difference is " + d2.mkString(" "))
     println(graph.numVertices + " nodes, " + graph.numEdges + " edges")
     val g2 = GraphCleaning.cleanGraph(sc, graph)
     println(g2.numVertices + " nodes, " + g2.numEdges + " edges")
-
+    System.exit(1)
     val fw: FileWriter = new FileWriter("exp" + dataset + ".txt");
     val header = "method\twave\tlmsiAll\tlmsiDistinct\tmean\tmedGraphDeg\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tl2\tlmin\tlmax\n"
     fw.write(header);

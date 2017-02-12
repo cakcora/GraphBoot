@@ -21,7 +21,7 @@ object TwitterTimelineDriver {
   def main(args: Array[String]) {
 
     val cb = new ConfigurationBuilder()
-    val cre = Credent.getApp(0)
+    val cre = Credent.getApp(1)
     cb.setDebugEnabled(true)
       .setOAuthConsumerKey(cre.apiKey)
       .setOAuthConsumerSecret(cre.apiSecret)
@@ -95,7 +95,6 @@ object TwitterTimelineDriver {
   }
 
   def getNext(filename: String, file2name: String, seeds: Set[String], wave: Int): Set[String] = {
-    //    println("searching with "+seeds.size)
     val f1 = Source.fromFile(filename).getLines().toArray.filter(e => seeds.contains(e.split("\t")(0))).map(e => e.split("\t")(1)).toSet
 
 
