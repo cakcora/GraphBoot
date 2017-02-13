@@ -78,7 +78,7 @@ object ClassifierData {
     val seedDepUsers: RDD[(String, String)] = sc.makeRDD(seedDepTweets).map(e => (e(0), clean(e(12), stops, minWordLength))).reduceByKey(_ + " " + _)
     val seedNonDepUsers: RDD[(String, String)] = sc.makeRDD(seedNonDepTweets).map(e => (e(0), clean(e(12), stops, minWordLength))).reduceByKey(_ + " " + _)
     val percOfLabeledData: Int = 36
-    val n = ((100 / percOfLabeledData) * (seedNonDepUsers.count() + seedDepUsers.count())).toInt
+    val n = ((100.0 / percOfLabeledData) * (seedNonDepUsers.count() + seedDepUsers.count())).toInt
     if (false) {
       //external tweet profiles are create from the cikm 2010 papers,
       //they are prepared once, and used in the experiments.

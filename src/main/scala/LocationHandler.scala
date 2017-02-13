@@ -19,7 +19,7 @@ object LocationHandler {
   Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
   Logger.getLogger("org.apache.spark.storage.BlockManager").setLevel(Level.ERROR)
   val outFile = new FileWriter("C:/Users/cxa123230/Dropbox/Publications/PostDoc work/GraphBoot/validation data/2015GB.txt")
-  val predFile: String = "results/classified/1resultPredsAll.txt"
+  val predFile: String = "results/classified/1resultPredsRestrictive.txt"
   val locFile: String = "results/data/existingLocs.txt"
   val abbFile: String = "C:/Users/cxa123230/Dropbox/Publications/PostDoc work/GraphBoot/validation data/stateAbb.txt"
   private val apiFile: String = "results/data/apikey.txt"
@@ -60,7 +60,7 @@ object LocationHandler {
     println(illLocs2beFound.size + " unique ill locs to be found, already have " + existing.size)
     println(wellLocs2beFound.size + " unique well locs to be found.")
     val fetch = true
-    val buf: ArrayBuffer[(String, String)] = if (fetch) findMissingLocations(locFile, illLocs2beFound, key) else ArrayBuffer.empty[(String, String)]
+    val buf: ArrayBuffer[(String, String)] = if (fetch) findMissingLocations(locFile, wellLocs2beFound, key) else ArrayBuffer.empty[(String, String)]
 
     buf.appendAll(existing)
     val idMap = buf.toMap[String, String]

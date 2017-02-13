@@ -21,8 +21,9 @@ object Holder {
 
   val featureFile: String = "results/classified/1featureWords.txt"
   val inputFile: String = "results/classified/1inputGB.txt"
-  val prevPred: String = "results/classified/0resultPredsall.txt"
+  val prevPred: String = "results/classified/1resultPredsRestrictive.txt"
   var testLabel: Int = 2
+
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
@@ -40,7 +41,7 @@ object Holder {
     val prevLabels = Source.fromFile(prevPred).getLines().toList
     val prevDepusers: Set[String] = prevLabels.map(e => e.split("\t")).filter(f => f(1) == "1.0").map(e => e(0)).toSet
     println(prevDepusers.size + " depressed users from previous labeling. This includes waves one and two")
-    val wave1AndDepressed: Set[String] = wave1 //.intersect(prevDepusers)
+    val wave1AndDepressed: Set[String] = wave1.intersect(prevDepusers)
     println(wave1AndDepressed.size + " wave one users were found to be depressed.")
     val wave2: Set[String] = getFriendsOf(wave1AndDepressed).diff(wave1).diff(seeds)
     println(wave2.size + " new wave two users found will be classified")
@@ -94,8 +95,20 @@ object Holder {
     val predictions = model.transform(testData)
     val ow = new FileWriter(ClassifierData.predResultFile)
     savePredictionsToFile(idMap, predictions, ow)
+    recordPrevious(seeds, wave1AndDepressed, ow)
+    ow.close
   }
 
+  def recordPrevious(seeds: Set[String], prevDepusers: Set[String], ow: FileWriter): Unit = {
+    for (user <- prevDepusers) {
+      ow.append(user + "\t" + "1.0" + "\r\n")
+      ow.flush()
+    }
+    for (user <- seeds) {
+      ow.append(user + "\t" + "1.0" + "\r\n")
+      ow.flush()
+    }
+  }
   def savePredictionsToFile(idMap: mutable.HashMap[Int, String], predictions: DataFrame, ow: FileWriter): Unit = {
     val preds: Array[Row] = predictions.select("label", "predictedLabel").rdd.collect()
     for (row <- preds) {
@@ -104,7 +117,7 @@ object Holder {
 
       ow.append(lb + "\t" + pl + "\r\n")
     }
-    ow.close
+
   }
 
   def getProfiles(sc: SparkContext, nextUsers: Set[String], returnRawProfiles: Boolean = false): RDD[(String, String)] = {

@@ -1,27 +1,24 @@
 import java.io.FileWriter
+import java.text.SimpleDateFormat
+import java.util.{Date, Locale}
 
 import org.apache.log4j.{Level, Logger}
+import org.apache.spark.SparkContext
 import org.apache.spark.graphx._
 import org.apache.spark.sql.SparkSession
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 /**
   * Created by cxa123230 on 2/8/2017.
   * Experiment 3. Requires results from Holder.scala experiments
   */
-object StatisticHandler {
+object TimeHandler {
   Logger.getLogger("org.apache.spark").setLevel(Level.ERROR)
   Logger.getLogger("org.apache.spark.storage.BlockManager").setLevel(Level.ERROR)
   val predResultFile: String = "results/classified/1resultPredsRestrictive.txt"
 
-  val symptomWords = List("anxiety", "withdrawal", "severe", "delusions", "adhd", "weight", "insomnia", "drowsiness", "suicidal", "appetite", "dizziness", "nausea", "episodes", "attacks", "sleep", "seizures", "addictive", "weaned", "swings", "dysfunction", "blurred", "irritability", "headache", "fatigue", "imbalance", "nervousness", "psychosis", "drowsy")
-  val disclosureWords = List("fun", "play", "helped", "god", "answer", "wants", "leave", "beautiful", "suffer", "sorry", "tolerance", "agree", "hate", "helpful", "haha", "enjoy", "social", "talk", "save", "win", "care", "love", "like", "hold", "cope", "amazing", "discuss")
-  val treatmentWords = List("medication", "side-effects", "doctor", "doses", "effec-tive", "prescribed", "therapy", "inhibitor", "stimulant", "antidepressant", "patients", "neurotransmitters", "prescriptions", "psychotherapy", "diagnosis", "clinical", "pills", "chemical", "counteract", "toxicity", "hospitalization", "sedative", "150mg", "40mg", "drugs")
-  val relationshipWords = List("home,", "woman,", "she,", "him,", "girl,", "game,", "men,", "friends,", "sexual,", "boy,", "someone,", "movie,", "favorite,", "jesus,", "house,", "music,", "religion,", "her,", "songs,", "party,", "bible,", "relationship,", "hell,", "young,", "style,", "church,", "lord,", "father,", "season,", "heaven,", "dating")
-  val words = Map(("symptom", symptomWords), ("disclosure", disclosureWords), ("treatment", treatmentWords), ("relationship", relationshipWords))
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
@@ -33,10 +30,8 @@ object StatisticHandler {
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
     val seeds: Set[String] = ClassifierData.getSeeds()
-    val dataset = "disclosure"
-    //"treatment","disclosure","symptom","relationship"
-    if (!words.contains(dataset)) System.exit(1)
-    val usedWords = words(dataset)
+    val dataset = "time"
+
     println(seeds.size + " seeds are used.")
 
 
@@ -58,23 +53,17 @@ object StatisticHandler {
 
     val edgeSet: Array[(Long, Long)] = edges.map(e => (idMap(e._1), idMap(e._2))).toArray
     println(edgeSet.length + " edges are prepared for the graph")
-    val returnRawProfiles: Boolean = true
-    val userProfiles: Map[String, String] = Holder.getProfiles(sc, depressedUsers, returnRawProfiles).filter(f => depressedUsers.contains(f._1)).collect.toMap
+    val info0 = Source.fromFile(ClassifierData.infoFile).getLines().toList.map(f => f.split("\t"))
+    println(info0.size + " users were found in the info file")
+    val timed: Map[String, String] = info0.filter(f => f(10) != "null").map(e => (e(0), e(10))).toMap
+    println(timed.size + " users with time")
+    val times: Set[String] = timed.values.toSet
+    println(times.size + " different timezones:" + times.mkString(", "))
+    val userTimeCounts: mutable.Map[Int, Int] = getTimes(sc, depressedUsers, timed, idMap)
 
-    println(userProfiles.size + " user profiles found.")
-    val buf: ArrayBuffer[(PartitionID, PartitionID)] = mutable.ArrayBuffer.empty[(Int, Int)]
-    for (user <- depressedUsers) {
-      var deg = 1
-      if (userProfiles.contains(user)) {
-        val profile = userProfiles(user).replaceAll("[^A-Za-z0-9 ]", " ").toLowerCase()
-        val text = profile.split(" ").filter(f => f.length > 1)
-        for (t <- text) {
-          if (usedWords.contains(t)) deg += 1
-        }
-      }
-      buf.append((idMap(user).toInt, deg))
-    }
-    val degreeMap: Map[Int, Int] = buf.toMap
+    println(userTimeCounts.size + " user profiles found.")
+
+    val degreeMap: Map[Int, Int] = userTimeCounts.toMap
 
     println(degreeMap.size + " users degrees found")
     val graph: Graph[Int, Int] = Graph.fromEdgeTuples(sc.makeRDD(edgeSet), defaultValue = 0)
@@ -101,5 +90,38 @@ object StatisticHandler {
     fw.write(method + "\t" + expOptions("wave") + "\t" + txt("lmsiAll") + "\t" + txt("lmsiDistinct") + "\t" + txt("mean") + "\t" + txt("medGraphDeg") + "\t" + txt("avgGraphDeg") + "\t" + txt("varianceOfBootStrapDegrees") + "\t" + txt("l1") + "\t" + txt("l2") + "\t" + txt("lmin") + "\t" + txt("lmax") + "\n")
     fw.flush()
   }
+
+  def getTimes(sc: SparkContext, depUsers: Set[String], userTimes: Map[String, String], idMap: mutable.HashMap[String, VertexId]): mutable.Map[Int, Int] = {
+
+    val depressedTweets: List[(String, String)] = Source.fromFile(ClassifierData.tweetFile).getLines().map(e => {
+      val arr = e.split("\t")
+      val user: String = arr(0)
+      val tweetDate: String = arr(2)
+      (user, tweetDate)
+    }).toList.filter(f => depUsers.contains(f._1))
+    //&&userTimes.contains(f._1)
+    val buf = mutable.HashMap.empty[Int, Int].withDefaultValue(1)
+    println(depressedTweets.length + " tweets from depressed users with a time zone.")
+
+    for (row <- depressedTweets) {
+      val usr = row._1
+      val date = row._2
+      if (date != "") {
+        val twitterDate: Date = getTwitterDate(date)
+        val tim = twitterDate.getHours
+        if (tim < 6 || tim > 21) {
+          buf(idMap(usr).toInt) += 1
+        }
+      }
+    }
+    buf
+  }
+
+  def getTwitterDate(date: String): Date = {
+    val sdf: SimpleDateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
+      Locale.ENGLISH)
+    return sdf.parse(date)
+  }
+
 }
 
