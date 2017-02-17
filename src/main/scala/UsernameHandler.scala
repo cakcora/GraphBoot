@@ -1,9 +1,6 @@
 import java.io.FileWriter
-import java.text.SimpleDateFormat
-import java.util.{Date, Locale}
 
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.SparkContext
 import org.apache.spark.graphx._
 import org.apache.spark.sql.SparkSession
 
@@ -15,7 +12,7 @@ import scala.util.Random
   * Created by cxa123230 on 2/8/2017.
   * Experiment 3. Requires results from Holder.scala experiments
   */
-object TimeHandler {
+object UsernameHandler {
   Logger.getLogger("org.apache.spark").setLevel(Level.ERROR)
   Logger.getLogger("org.apache.spark.storage.BlockManager").setLevel(Level.ERROR)
   val predResultFile: String = "results/classified/1resultPredsRestrictive.txt"
@@ -31,7 +28,7 @@ object TimeHandler {
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
     val seeds: Set[String] = ClassifierData.getSeeds()
-    val dataset = "timenight"
+    val dataset = "username2"
 
     println(seeds.size + " seeds are used.")
 
@@ -56,11 +53,9 @@ object TimeHandler {
     println(edgeSet.length + " edges are prepared for the graph")
     val info0 = Source.fromFile(ClassifierData.infoFile).getLines().toList.map(f => f.split("\t"))
     println(info0.size + " users were found in the info file")
-    val timed: Map[String, String] = info0.filter(f => f(10) != "null").map(e => (e(1), e(10))).toMap
-    println(timed.size + " users have a timezone set.")
-    val times: Set[String] = timed.values.toSet
-    println(times.size + " different timezones found, such as " + times.take(5).mkString(", "))
-    val userTimeCounts: mutable.Map[Int, Int] = getTimes(sc, depressedUsers, timed, idMap)
+    val dated: Map[String, String] = info0.filter(f => f(5) != "null").map(e => (e(1), e(5))).toMap
+    println(dated.size + " users' registration dates were found.")
+    val userTimeCounts: Map[Int, Int] = getNameLength(idMap)
 
     println(userTimeCounts.size + " user profiles found.")
 
@@ -79,7 +74,7 @@ object TimeHandler {
       println("Iteration: " + q)
       for (wave <- List(0, 1, 2)) {
         val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave))
-        val seedArray: Array[(VertexId, Int)] = Random.shuffle(seeds.toList).take(5).map(e => (idMap(e), 0)).toArray
+        val seedArray: Array[(VertexId, Int)] = Random.shuffle(idMap.keySet.toList).take(5).map(e => (idMap(e), 0)).toArray
         val txtPar = GraphBoot.compute(sc, g2, degreeMap, seedArray, expOptions, "parSpark")
         printResults(fw, expOptions, txtPar, "parSpark")
       }
@@ -92,39 +87,15 @@ object TimeHandler {
     fw.flush()
   }
 
-  def getTimes(sc: SparkContext, depUsers: Set[String], userTimes: Map[String, String], idMap: mutable.HashMap[String, VertexId]): mutable.Map[Int, Int] = {
-    println(depUsers.size + " users' tweets are searched.")
-    val depressedTweets: List[(String, String)] = Source.fromFile(ClassifierData.tweetFile).getLines().map(e => {
-      val arr = e.split("\t")
-      val user: String = arr(0)
-      val tweetDate: String = arr(2)
-      (user, tweetDate)
-    }).toList.filter(f => depUsers.contains(f._1))
-    //&&userTimes.contains(f._1)
-    val statMap = mutable.HashMap.empty[Int, Int]
-    println(depressedTweets.length + " tweets from depressed users with a time zone.")
-
-    for (row <- depressedTweets) {
-      val usr = row._1
-      val id = idMap(usr).toInt
-      val date = row._2
-      if (!statMap.contains(id)) statMap(id) = 1
-      if (date != "") {
-        val twitterDate: Date = getTwitterDate(date)
-        val tim = twitterDate.getHours
-        if (tim < 6 || tim > 21) {
-          statMap(id) += 1
-        }
-      }
-    }
-    statMap
+  def getNameLength(idMap: mutable.HashMap[String, Long]): Map[Int, Int] = {
+    val userDates: Map[Int, Int] = idMap.map(e => {
+      val user = e._1
+      val l: Int = user.length
+      (idMap(user).toInt, l)
+    }).toMap
+    userDates
   }
 
-  def getTwitterDate(date: String): Date = {
-    val sdf: SimpleDateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
-      Locale.ENGLISH)
-    return sdf.parse(date)
-  }
 
 }
 

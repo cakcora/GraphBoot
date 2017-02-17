@@ -32,7 +32,7 @@ object ExperimentDriverLogNormalNetworks {
           val mu = 3.0
           val grOptions: Map[String, AnyVal] = Map(("mu", mu), ("sigma", sigma), ("vertices", 100000))
           val graph: Graph[Int, Int] = DataLoader.load(sc, networkName, grOptions)
-          val degreeMap: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
+          val degreeMap: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => (e._1.toInt, e._2.length)).toMap
           val seedCount = 20
           val maxSeed = 30
           val allSeeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)

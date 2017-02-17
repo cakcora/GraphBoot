@@ -19,7 +19,7 @@ object ExperimentDriverRealNetworks {
       .getOrCreate()
 
     val sc = spark.sparkContext
-    val dataset = "gowalla"
+    val dataset = "dblp"
     println("data set is: " + dataset)
     val fw: FileWriter = new FileWriter("exp" + dataset + ".txt");
     val header = "method\twave\tseed\tlmsiAll\tlmsiDistinct\tmean\tmedGraphDeg\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
@@ -36,8 +36,10 @@ object ExperimentDriverRealNetworks {
     else {
       throw new IllegalArgumentException(dataset + " network is not available")
     }
-    val degreeMap: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
+    val degreeMap: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => (e._1.toInt, e._2.length)).toMap
     println(graph.numEdges + " cleaned edges among " + graph.numVertices + " vertices")
+    val degree = graph.degrees.collect().map(e => e._2).sum / (1.0 * graph.numVertices)
+    print(degree + " average degrees")
     for (iteration <- 1 to 50) {
       println(" iter " + iteration)
       val maxSeed = 100

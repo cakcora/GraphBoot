@@ -7,6 +7,7 @@ import org.apache.spark.sql.SparkSession
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
+import scala.util.Random
 
 /**
   * Created by cxa123230 on 2/8/2017.
@@ -19,7 +20,7 @@ object StatisticHandler {
 
   val symptomWords = List("anxiety", "withdrawal", "severe", "delusions", "adhd", "weight", "insomnia", "drowsiness", "suicidal", "appetite", "dizziness", "nausea", "episodes", "attacks", "sleep", "seizures", "addictive", "weaned", "swings", "dysfunction", "blurred", "irritability", "headache", "fatigue", "imbalance", "nervousness", "psychosis", "drowsy")
   val disclosureWords = List("fun", "play", "helped", "god", "answer", "wants", "leave", "beautiful", "suffer", "sorry", "tolerance", "agree", "hate", "helpful", "haha", "enjoy", "social", "talk", "save", "win", "care", "love", "like", "hold", "cope", "amazing", "discuss")
-  val treatmentWords = List("medication", "side-effects", "doctor", "doses", "effec-tive", "prescribed", "therapy", "inhibitor", "stimulant", "antidepressant", "patients", "neurotransmitters", "prescriptions", "psychotherapy", "diagnosis", "clinical", "pills", "chemical", "counteract", "toxicity", "hospitalization", "sedative", "150mg", "40mg", "drugs")
+  val treatmentWords = List("medication", "side-effects", "doctor", "doses", "effective", "prescribed", "therapy", "inhibitor", "stimulant", "antidepressant", "patients", "neurotransmitters", "prescriptions", "psychotherapy", "diagnosis", "clinical", "pills", "chemical", "counteract", "toxicity", "hospitalization", "sedative", "150mg", "40mg", "drugs")
   val relationshipWords = List("home,", "woman,", "she,", "him,", "girl,", "game,", "men,", "friends,", "sexual,", "boy,", "someone,", "movie,", "favorite,", "jesus,", "house,", "music,", "religion,", "her,", "songs,", "party,", "bible,", "relationship,", "hell,", "young,", "style,", "church,", "lord,", "father,", "season,", "heaven,", "dating")
   val words = Map(("symptom", symptomWords), ("disclosure", disclosureWords), ("treatment", treatmentWords), ("relationship", relationshipWords))
 
@@ -33,7 +34,7 @@ object StatisticHandler {
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
     val seeds: Set[String] = ClassifierData.getSeeds()
-    val dataset = "disclosure"
+    val dataset = "treatment"
     //"treatment","disclosure","symptom","relationship"
     if (!words.contains(dataset)) System.exit(1)
     val usedWords = words(dataset)
@@ -89,7 +90,7 @@ object StatisticHandler {
       println("Iteration: " + q)
       for (wave <- List(0, 1, 2)) {
         val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave))
-        val seedArray: Array[(VertexId, Int)] = seeds.map(e => (idMap(e), 0)).toArray
+        val seedArray: Array[(VertexId, Int)] = Random.shuffle(seeds.toList).take(5).map(e => (idMap(e), 0)).toArray
         val txtPar = GraphBoot.compute(sc, g2, degreeMap, seedArray, expOptions, "parSpark")
         printResults(fw, expOptions, txtPar, "parSpark")
       }
