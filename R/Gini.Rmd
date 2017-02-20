@@ -29,21 +29,23 @@ waveGini<-function(inputFolder,dataset){
    
 }
  
-resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/"
+resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/seeded/"
 data<-data.frame()
 data<- seedGini(resultFolder,"Facebook")
 data<-rbind(data,seedGini(resultFolder,"Enron"))
  data<-rbind(data,seedGini(resultFolder,"Dblp"))
  data<-rbind(data,seedGini(resultFolder,"Epinions"))
  data<-rbind(data,seedGini(resultFolder,"Wiki"))
- 
+ data<-rbind(data,seedGini(resultFolder,"Gowalla"))
+ data<-rbind(data,seedGini(resultFolder,"Kite"))
 
-m12<- ggplot(data,aes(x=seed,y=V1,color=dataset))+geom_line(size=1)+scale_x_continuous(name="seed")+theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_y_continuous(name="Gini value")
-m12<-m12+geom_point(aes(shape=dataset), size=2) +scale_shape_manual(values=c(0,1,2,3,4,5)) 
+m12<- ggplot(data,aes(x=seed,y=V1,color=dataset))+geom_line(size=2)+scale_x_continuous(name="seed")+theme(legend.position = c(0.8, 0.6),text = element_text(size=16))+scale_y_continuous(name="Gini value")
+m12<-m12+geom_point(aes(shape=dataset), size=2) +scale_shape_manual(values=c(0,1,2,3,4,5,6,7)) 
 m12
 
-resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
-ggsave(filename=paste(resultFolder,"giniSeed.eps",sep=""),plot=m12,width=6,height=4,unit="in")
+figFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
+ggsave(filename=paste(figFolder,"giniSeed.eps",sep=""),plot=m12,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"giniSeed.png",sep=""),plot=m12,width=6,height=4,unit="in")
  
 resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/waved/"
 wdata<-data.frame()
@@ -52,14 +54,15 @@ wdata<-rbind(wdata,waveGini(resultFolder,"Enron"))
  wdata<-rbind(wdata,waveGini(resultFolder,"Dblp"))
  wdata<-rbind(wdata,waveGini(resultFolder,"Epinions"))
  wdata<-rbind(wdata,waveGini(resultFolder,"Wiki"))
- wdata<-rbind(wdata,waveGini(resultFolder,"gowalla"))
-  wdata<-rbind(wdata,waveGini(resultFolder,"kite"))
+ wdata<-rbind(wdata,waveGini(resultFolder,"Gowalla"))
+  wdata<-rbind(wdata,waveGini(resultFolder,"Kite"))
   
-resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/"
-m13<- ggplot(wdata,aes(x=wave,y=V1,color=dataset))+geom_line(size=2)+scale_x_continuous(name="wave")+theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_y_continuous(name="Gini value")
+ 
+m13<- ggplot(wdata,aes(x=wave,y=V1,color=dataset))+geom_line(size=2)+scale_x_continuous(name="wave")+theme(legend.position = c(0.8, 0.6),text = element_text(size=16))+scale_y_continuous(name="Gini value")
 m13<-m13+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
 m13
-ggsave(filename=paste(resultFolder,"figs/giniWave.eps",sep=""),plot=m13,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"giniWave.eps",sep=""),plot=m13,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"giniWave.png",sep=""),plot=m13,width=6,height=4,unit="in")
  
 ```
 

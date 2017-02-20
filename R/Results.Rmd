@@ -23,47 +23,71 @@ vis<-function(resultFolder,fileVal,dataset){
   fName<- paste(resultFolder,fileVal,".txt",sep="")
   
   ex <- read.table(file=fName, header=TRUE,sep="\t")
-  effect<-ddply(ex,.(seed),summarise,V1=mean(mean/avgGraphDeg),V2=mean(varianceOfBootStrapDegrees),V3=mean(lmsiDistinct))
+  effect<-ddply(ex,.(seed),summarise,V1=mean(mean/avgGraphDeg),V2=mean((l2-l1)/mean),V3=mean(lmsiDistinct))
   
   effect<-cbind(effect,dataset)
   
   return(effect)
 }
-vals =c("orange","blue", "green")
-resultFolder<-"C:/Users/cxa123230/IdeaProjects/GraphBoot/results/"
-o1<-vis(resultFolder,"expenron" ,"Enron")
-o11<-vis(resultFolder,"expenronDirected" ,"EnronD")
-o2<-vis(resultFolder,"expDBLP" ,"Dblp")
-o3<-vis(resultFolder,"expfacebook" ,"Facebook")
-o4<-vis(resultFolder,"expepinions" ,"Epinions")
-o41<-vis(resultFolder,"expepinionsDirected" ,"EpinionsD")
-o5<-vis(resultFolder,"expwiki" ,"Wiki")
-o51<-vis(resultFolder,"expwikiDirected" ,"WikiD")
+ 
+resultFolder<-"C:/Users/cxa123230/IdeaProjects/GraphBoot/results/seeded/"
+d1<-vis(resultFolder,"expenron" ,"Enron")
+d2<-vis(resultFolder,"expepinions" ,"Epinions")
+d3<-vis(resultFolder,"expwiki" ,"Wiki")
 
-df<-data.frame(o1)
-#df<-rbind(df,o11)
-df<-rbind(df,o2)
-df<-rbind(df,o3)
-df<-rbind(df,o4)
-#df<-rbind(df,o41)
-df<-rbind(df,o5)
-#df<-rbind(df,o51)
+u1<-vis(resultFolder,"expKite" ,"Kite")
+u2<-vis(resultFolder,"expGowalla" ,"Gowalla")
+u3<-vis(resultFolder,"expDBLP" ,"Dblp")
+u4<-vis(resultFolder,"expfacebook" ,"Facebook")
+
+directed<-data.frame(d1)
+directed<-rbind(directed,d2)
+directed<-rbind(directed,d3)
+
+undirected<-data.frame(u1)
+undirected<-rbind(undirected,u2)
+undirected<-rbind(undirected,u3)
+undirected<-rbind(undirected,u4)
+ 
 lt<-c(1, 2,3, 4,5,6,7,8)
 
-m11<-ggplot(df, aes(x=seed,y =V1, color=dataset, group=dataset))   
-m11<-m11+ geom_line(size=2)+scale_y_continuous(limits=c(0,1.6),name=expression(paste(bar(x)," / ",mu)))
-m11<-m11+ theme(legend.position = c(0.8, 0.8),text = element_text(size=16)) 
-m11<-m11+ geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4)) 
-m11
+pu<-ggplot(undirected, aes(x=seed,y =V1, color=dataset, group=dataset))   
+pu<-pu+ geom_line(size=2)+scale_y_continuous(limits=c(0,1.6),name=expression(paste(bar(x)," / ",mu)))
+pu<-pu+ theme(legend.position = c(0.8, 0.2),text = element_text(size=16)) 
+pu<-pu+ geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
+pu
 
-m12<-ggplot(df, aes(x=seed,y =V2, color=dataset, group=dataset)) 
-m12<-m12+ geom_line(size=2)+scale_y_log10(name=expression("Variance in bootstraps"))  
-m12<-m12+ theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_linetype_manual(values=lt)
-m12<-m12+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4)) 
-m12
+vu<-ggplot(undirected, aes(x=seed,y =V2, color=dataset, group=dataset)) 
+vu<-vu+ geom_line(size=2)+scale_y_continuous(name=expression(paste("BCI"," / ",bar(x))))   
+vu<-vu+ theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_linetype_manual(values=lt)
+vu<-vu+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
+vu
  
+figFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
+ggsave(filename=paste(figFolder,"resultsvalueUndirected.eps",sep=""),plot=pu,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"resultsvalueUndirected.png",sep=""),plot=pu,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"resultsintervalUndirected.eps",sep=""),plot=vu,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"resultsintervalUndirected.png",sep=""),plot=vu,width=6,height=4,unit="in")
 
-ggsave(filename=paste(resultFolder,"figs/results.eps",sep=""),plot=m11,width=6,height=4,unit="in")
+#--------------------------------------------------
+pd<-ggplot(directed, aes(x=seed,y =V1, color=dataset, group=dataset))   
+pd<-pd+ geom_line(size=2)+scale_y_continuous(limits=c(0,1),name=expression(paste(bar(x)," / ",mu)))
+pd<-pd+ theme(legend.position = c(0.8, 0.2),text = element_text(size=16)) 
+pd<-pd+ geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
+pd
+
+vd<-ggplot(directed, aes(x=seed,y =V2, color=dataset, group=dataset)) 
+vd<-vd+ geom_line(size=2)+scale_y_continuous(name=expression(paste("BCI"," / ",bar(x))))  
+vd<-vd+ theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_linetype_manual(values=lt)
+vd<-vd+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
+vd
+ 
+figFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
+ggsave(filename=paste(figFolder,"resultsvalueDirected.eps",sep=""),plot=pd,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"resultsvalueDirected.png",sep=""),plot=pd,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"resultsintervalDirected.eps",sep=""),plot=vd,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"resultsintervalDirected.png",sep=""),plot=vd,width=6,height=4,unit="in")
+
 
 ```
 

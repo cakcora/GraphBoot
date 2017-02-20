@@ -18,7 +18,7 @@ vis<-function(inputFolder,dataset){
   dataFrame <-(read.csv(paste(inputFolder,dataset,"Dist.txt",sep=""),sep="\t",header=F))
   dataFrame<-arrange(dataFrame,V1)
 
-  dataFrame$V3<-cumsum(dataFrame$V3)
+  dataFrame$V3<-round(cumsum(dataFrame$V3),2)
   dataFrame$dataset<-dataset 
   return(dataFrame)
    
@@ -29,15 +29,17 @@ data<-rbind(data,vis(resultFolder,"Enron"))
 data<-rbind(data,vis(resultFolder,"Dblp"))
 data<-rbind(data,vis(resultFolder,"Epinions"))
 data<-rbind(data,vis(resultFolder,"Wiki"))
-data<-rbind(data,vis(resultFolder,"gowalla"))
+data<-rbind(data,vis(resultFolder,"Gowalla"))
+data<-rbind(data,vis(resultFolder,"Kite"))
 
 m12<- ggplot(data,aes(x=V1,y=V3, color=dataset,group=dataset))  
-m12<- m12+geom_line(size=1)+geom_point(aes(shape=dataset), size=2) +scale_shape_manual(values=c(0,1,2,3,4,5)) 
+m12<- m12+geom_line(size=1)+geom_point(aes(shape=dataset), size=2) +scale_shape_manual(values=c(12,6,17,8,19,3,4)) 
 m12<- m12+scale_x_log10(name="degree")+ theme(legend.position = c(0.8, 0.6),text = element_text(size=16)) 
 m12<- m12+scale_y_continuous(name="fraction of nodes")
 m12
 
 resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/"
 ggsave(filename=paste(resultFolder,"figs/dists.eps",sep=""),plot=m12,width=6,height=4,unit="in")
+ggsave(filename=paste(resultFolder,"figs/dists.png",sep=""),plot=m12,width=6,height=4,unit="in")
  
 ```

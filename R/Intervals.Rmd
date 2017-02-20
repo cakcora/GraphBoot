@@ -12,28 +12,52 @@ require(ggplot2)
 
 rm(list=ls(all=TRUE))
 
-vis<-function(inputFolder,dataset){ 
+vis<-function(inputFolder,dataset,phase=""){ 
   
-  dataFrame <-(read.csv(paste(inputFolder,"exp",dataset,".txt",sep=""),sep="\t",header=T))
+  dataFrame <-(read.csv(paste(inputFolder,"exp",phase,dataset,".txt",sep=""),sep="\t",header=T))
    
   effect<-ddply(dataFrame,.(seed),summarise,V1=mean((l2-l1)/mean),V4=max(l2/mean),V2=mean(varianceOfBootStrapDegrees),V3=mean(lmax-lmin))
   effect<-cbind(effect,dataset) 
   return(effect)
-   
 } 
-inputFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/"
+inputFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/seeded/"
 data<- vis(inputFolder,"Facebook")
 data<-rbind(data,vis(inputFolder,"Enron"))
 data<-rbind(data,vis(inputFolder,"Dblp"))
 data<-rbind(data,vis(inputFolder,"Epinions")) 
 data<-rbind(data,vis(inputFolder,"Wiki"))
+data<-rbind(data,vis(inputFolder,"Gowalla"))
+data<-rbind(data,vis(inputFolder,"Kite"))
  
 
-m12<- ggplot(data[data$seed>10,],aes(x=seed,y=V1, color=dataset,group=dataset))+geom_line(size=2)+scale_x_continuous(name="seed")+theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_y_continuous(name="interval length")
+m12<- ggplot(data[data$seed>10,],aes(x=seed,y=V1, color=dataset,group=dataset))+geom_line(size=2)+scale_x_continuous(name="seed")+theme(legend.position = c(0.8, 0.6),text = element_text(size=16))+scale_y_continuous(name="Relative interval length")
 m12<-m12+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
 m12 
+figFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
+ggsave(filename=paste(figFolder,"intervals.png",sep=""),plot=m12,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"intervals.eps",sep=""),plot=m12,width=6,height=4,unit="in")
+inputFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/depression/"
 
-ggsave(filename=paste(inputFolder,"figs/intervals.png",sep=""),plot=m12,width=6,height=4,unit="in")
+
+wavefunc<-function(inputFolder,aspect){ 
+  
+  dataFrame <-(read.csv(paste(inputFolder,"exp",aspect,".txt",sep=""),sep="\t",header=T))
+   
+  effect<-ddply(dataFrame,.(wave),summarise,V1=mean((l2-l1)/mean),V4=max(l2/mean),V2=mean(varianceOfBootStrapDegrees),V3=mean(lmax-lmin))
+  effect<-cbind(effect,aspect) 
+  return(effect)
+   
+} 
+ 
+depdata<-wavefunc(inputFolder,"Disclosure")
+depdata<-rbind(depdata,wavefunc(inputFolder,"Treatment"))
+depdata<-rbind(depdata,wavefunc(inputFolder,"Symptom"))
+m13<- ggplot(depdata,aes(x=wave,y=V1, color=aspect,group=aspect))+geom_line(size=2)+scale_x_continuous(name="wave",breaks=c(0,1,2))+theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_y_continuous(name="Relative interval length")
+m13<-m13+geom_point(aes(shape=aspect), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
+m13 
+ggsave(filename=paste(figFolder,"aspectIntervals.png",sep=""),plot=m13,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"aspectIntervals.eps",sep=""),plot=m13,width=6,height=4,unit="in")
+
  
 ```
 

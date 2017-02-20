@@ -12,13 +12,9 @@ library(ggplot2)
 library(maps)
 
 myData <- read.csv("C:/Users/cxa123230/Dropbox/Publications/PostDoc work/GraphBoot/validation data/2015anyillness.txt",header=TRUE,sep="\t")
-head(myData)
 
 all_states <- map_data("state")
-all_states
-head(all_states)
 Total <- merge(all_states, myData, by="region")
-head(Total)
 Total <- Total[Total$region!="district of columbia",]
 
 
@@ -27,20 +23,21 @@ m41 <- ggplot()
 m41 <- m41 + geom_polygon(data=Total, aes(x=long, y=lat, group = group, fill=Total$or18),colour="white"
       ) + scale_fill_continuous(low = "thistle2", high = "darkred", guide="colorbar")
 m41 <- m41 + theme_bw()  + labs(fill = "Perc." 
-                            ,title = "Depression rates by state, NSDUH 2015", x="", y="")
-m41<-m41 + scale_y_continuous(breaks=c()) + scale_x_continuous(breaks=c()) + theme(panel.border =  element_blank())
+                            ,title = "NSDUH 2015", x="", y="")
+m41<-m41 + scale_y_continuous(breaks=c()) + scale_x_continuous(breaks=c()) + theme(panel.border =  element_blank())+theme(text = element_text(size=16))
 m41
 resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/"
 ggsave(filename=paste(resultFolder,"figs/deprnsduh.png",sep=""),plot=m41,width=6,height=4,unit="in")
 ggsave(filename=paste(resultFolder,"figs/deprnsduh.eps",sep=""),plot=m41,width=6,height=4,unit="in")
 
 gbData <- read.csv("C:/Users/cxa123230/Dropbox/Publications/PostDoc work/GraphBoot/validation data/2015GB.txt",header=TRUE,sep="\t")
-gbData$res <-round(100*gbData$or18/(gbData$well+gbData$or18),2)
-head(gbData)
+gbData$well<-(gbData$or18*gbData$well)/gbData$or18
+gbData$res<-100*gbData$or18/(gbData$well+gbData$or18)
+#head(gbData)
 
 
 gbTotal <- merge(all_states, gbData, by="region")
-head(gbTotal)
+
 gbTotal <- gbTotal[gbTotal$region!="district of columbia",]
 gbTotal <- gbTotal[gbTotal$region!="dc",]
 gbTotal <- gbTotal[gbTotal$region!="new england",]
@@ -49,8 +46,8 @@ m42 <- ggplot()
 m42 <- m42 + geom_polygon(data=gbTotal, aes(x=long, y=lat, group = group, fill=res),colour="white"
       ) + scale_fill_continuous(low = "thistle2", high = "darkred", guide="colorbar")
 m42 <- m42 + theme_bw()  + labs(fill = "Perc." 
-                            ,title = "Depression rates by state, GraphBoot 2017", x="", y="")
-m42<-m42 + scale_y_continuous(breaks=c()) + scale_x_continuous(breaks=c()) + theme(panel.border =  element_blank())
+                            ,title = "GraphBoot 2017", x="", y="")
+m42<-m42 + scale_y_continuous(breaks=c()) + scale_x_continuous(breaks=c()) + theme(panel.border =  element_blank())+theme(text = element_text(size=16))
 m42
  
 ggsave(filename=paste(resultFolder,"figs/deprgb.png",sep=""),plot=m42,width=6,height=4,unit="in")

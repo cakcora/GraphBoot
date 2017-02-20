@@ -21,7 +21,7 @@ rm(list=ls(all=TRUE))
 embedFunc<-function(resultFolder,dataset){ 
   
   e<-data.frame(read.csv(paste(resultFolder,dataset,"embeddedness",".txt",sep=""),sep="\t",header=F))
-  e<-(round(e,2)) 
+  e<-(round(e,1)) 
   f<-ddply(e,.(V1),summarise,R1=length(V1))
   f$R1<-round(f$R1/nrow(e),3)
   f$R1<-cumsum(f$R1)
@@ -34,18 +34,21 @@ embedFunc<-function(resultFolder,dataset){
 
 resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/embeddedness/"
 
-d<- embedFunc(resultFolder,"Facebook")
-d<-rbind(d,embedFunc(resultFolder,"Enron"))
- d<-rbind(d,embedFunc(resultFolder,"Dblp"))
- d<-rbind(d,embedFunc(resultFolder,"Epinions"))
- d<-rbind(d,embedFunc(resultFolder,"Wiki"))
+und<- embedFunc(resultFolder,"Facebook")
+und<-rbind(und,embedFunc(resultFolder,"Enron"))
+ und<-rbind(und,embedFunc(resultFolder,"Dblp"))
+ und<-rbind(und,embedFunc(resultFolder,"Epinions"))
+und<-rbind(und,embedFunc(resultFolder,"Wiki"))
+und<-rbind(und,embedFunc(resultFolder,"Kite"))
+und<-rbind(und,embedFunc(resultFolder,"Gowalla"))
  
-m12<- ggplot(d,aes(x=V1,y=(R1),color=dataset))+geom_line(size=1)+scale_x_continuous(name="embeddedness")+theme(legend.position = c(0.8, 0.6),text = element_text(size=16))+scale_y_sqrt(name="fraction of nodes")
-m12<-m12+geom_point(aes(shape=dataset), size=2) +scale_shape_manual(values=c(0,1,2,3,4)) 
+m12<- ggplot(und,aes(x=V1,y=(R1),color=dataset))+geom_line(size=1)+scale_x_continuous(name="embeddedness")+theme(legend.position = c(0.8, 0.6),text = element_text(size=16))+scale_y_sqrt(name="fraction of nodes")
+m12<-m12+geom_point(aes(shape=dataset), size=2) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
 m12
 
  figFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
 ggsave(filename=paste(figFolder,"embed.eps",sep=""),plot=m12,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"embed.png",sep=""),plot=m12,width=6,height=4,unit="in")
 
 ```
 
