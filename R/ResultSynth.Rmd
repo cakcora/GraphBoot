@@ -1,0 +1,73 @@
+---
+title: "results"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## GraphBoot R Scripts
+
+Working on the results of the GraphBoot Spark code:
+
+```{r}
+library(ggplot2)
+library(plyr)
+library(igraph)
+
+rm(list=ls(all=TRUE))
+
+
+vis<-function(resultFolder,fileVal,dataset){
+  fName<- paste(resultFolder,fileVal,".txt",sep="")
+  ex <- read.table(file=fName, header=TRUE,sep="\t")
+  effect<-ddply(ex,.(sigma),summarise,V1=mean(mean/avgGraphDeg))
+  return(effect)
+}
+ 
+resultFolder<-"C:/Users/cxa123230/IdeaProjects/GraphBoot/results/synt/"
+d1<-vis(resultFolder,"explognormal" ,"LogNormal")
+
+ 
+ 
+ 
+ 
+lt<-c(1, 2)
+
+pu<-ggplot(d1, aes(x=sigma,y =V1))   
+pu<-pu+ geom_line(size=2,color="orange")+scale_y_continuous(name=expression(paste(bar(x)," / ",mu)))
+pu<-pu+ theme(text = element_text(size=16))+scale_x_continuous(breaks=c(0.0,0.4,0.8,1.2,1.6))
+
+pu
+
+ 
+ 
+figFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
+ggsave(filename=paste(figFolder,"resultsLN.eps",sep=""),plot=pu,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"resultsLN.png",sep=""),plot=pu,width=6,height=4,unit="in")
+
+fName<- paste(resultFolder,"exprmat",".txt",sep="")
+ex <- read.table(file=fName, header=TRUE,sep="\t")
+ex$meanDegree<-round(ex$avgGraphDeg,0)
+effect<-ddply(ex,.(meanDegree),summarise,V1=mean(mean/avgGraphDeg))
+vu<-ggplot(effect, aes(x=meanDegree,y =V1))   
+vu<-vu+scale_x_continuous(name=expression(mu))
+vu<-vu+ geom_line(size=2,color="orange")+scale_y_continuous(name=expression(paste(bar(x)," / ",mu)))
+vu<-vu+ theme(text = element_text(size=16))
+
+vu
+ggsave(filename=paste(figFolder,"resultsRM.eps",sep=""),plot=vu,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"resultsRM.png",sep=""),plot=vu,width=6,height=4,unit="in")
+  
+
+
+```
+
+
+
+
+
+
+
+

@@ -1,0 +1,120 @@
+---
+title: "GraphBoot"
+output: html_notebook
+---
+
+Compares gini values of networks for different embeddedness values. 
+
+```{r}
+require(plyr)
+require(ggplot2)
+require(ineq)
+
+rm(list=ls(all=TRUE))
+
+avgEmbed<-function(resultFolder,dataset){ 
+  e<-(read.csv(paste(resultFolder,dataset,"embeddedness",".txt",sep=""),sep="\t",header=F))
+  #e<-data.frame(e[e$V1>0,])
+  m<-round(mean(e$V1),2)
+  return(data.frame(dataset,m)) 
+}
+ 
+
+seedGini<-function(inputFolder,dataset,emVal){ 
+  
+  dataFrame <-(read.csv(paste(inputFolder,"exp",dataset,".txt",sep=""),sep="\t",header=T))
+  effect <- ddply(dataFrame,.(seed),summarise,V1=ineq((l2-l1),type="Gini"),V2=ineq((lmax-lmin),type="Gini"))
+  effect<-cbind(effect,dataset,emVal)  
+  return(effect)
+   
+}
+ 
+ 
+resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/embeddedness/"
+embedVals<-data.frame()
+embedVals<- avgEmbed(resultFolder,"Facebook")
+embedVals<-rbind(embedVals,avgEmbed(resultFolder,"Enron"))
+embedVals<-rbind(embedVals,avgEmbed(resultFolder,"Dblp"))
+embedVals<-rbind(embedVals,avgEmbed(resultFolder,"Epinions"))
+embedVals<-rbind(embedVals,avgEmbed(resultFolder,"Wiki"))
+embedVals<-rbind(embedVals,avgEmbed(resultFolder,"kite"))
+embedVals<-rbind(embedVals,avgEmbed(resultFolder,"gowalla"))
+
+resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/seeded/"
+undiSeed<-data.frame()
+undiSeed<- seedGini(resultFolder,"Facebook",embedVals[embedVals$dataset=="Facebook",][1,2])
+undiSeed<-rbind(undiSeed,seedGini(resultFolder,"Dblp",embedVals[embedVals$dataset=="Dblp",][1,2]))
+undiSeed<-rbind(undiSeed,seedGini(resultFolder,"gowalla",embedVals[embedVals$dataset=="gowalla",][1,2]))
+undiSeed<-rbind(undiSeed,seedGini(resultFolder,"kite",embedVals[embedVals$dataset=="kite",][1,2]))
+undiSeed<-undiSeed[undiSeed$seed==100|undiSeed$seed==20|undiSeed$seed==40|undiSeed$seed==80,]
+undiSeed$seed <-as.factor(undiSeed$seed)
+
+diSeed<-data.frame()
+diSeed<-rbind(diSeed,seedGini(resultFolder,"Enron",embedVals[embedVals$dataset=="Enron",][1,2]))
+diSeed<-rbind(diSeed,seedGini(resultFolder,"Epinions",embedVals[embedVals$dataset=="Epinions",][1,2]))
+diSeed<-rbind(diSeed,seedGini(resultFolder,"Wiki",embedVals[embedVals$dataset=="Wiki",][1,2]))
+diSeed<-diSeed[diSeed$seed==100|diSeed$seed==20|diSeed$seed==40|diSeed$seed==80,]
+
+diSeed$seed <-as.factor(diSeed$seed)
+
+m12<- ggplot(undiSeed,aes(x=emVal,y=V1,group=seed,color=seed))+geom_line(size=1)+scale_x_continuous(name="embeddedness")+theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_y_continuous(name="Gini value")
+
+m12<-m12+geom_point(aes(shape=seed), size=2) +scale_shape_manual(values=c(0,1,2,3,4,5,6,7)) 
+m12
+
+m22<- ggplot(diSeed,aes(x=emVal,y=V1,group=seed,color=seed))+geom_line(size=1)+scale_x_continuous(name="embeddedness")+theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_y_continuous(name="Gini value")
+
+m22<-m22+geom_point(aes(shape=seed), size=2) +scale_shape_manual(values=c(0,1,2,3,4,5,6,7)) 
+m22
+
+ resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/"
+ggsave(filename=paste(resultFolder,"figs/compositeUn.eps",sep=""),plot=m12,width=6,height=4,unit="in")
+ggsave(filename=paste(resultFolder,"figs/compositeUn.png",sep=""),plot=m12,width=6,height=4,unit="in")
+
+ggsave(filename=paste(resultFolder,"figs/compositeDi.eps",sep=""),plot=m22,width=6,height=4,unit="in")
+ggsave(filename=paste(resultFolder,"figs/compositeDi.png",sep=""),plot=m22,width=6,height=4,unit="in")
+
+##########################################WAVE EXPERIMENTS########################################
+waveGini<-function(inputFolder,dataset,emVal){ 
+  
+  dataFrame <-(read.csv(paste(inputFolder,"expWaved",dataset,".txt",sep=""),sep="\t",header=T))
+  effect <- ddply(dataFrame,.(wave),summarise,V1=ineq((l2-l1),type="Gini"),V2=ineq((lmax-lmin),type="Gini"))
+  effect<-cbind(effect,dataset,emVal)  
+  return(effect)
+}
+
+resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/waved/"
+undiWave<-data.frame()
+diWave<-data.frame()
+undiWave<- waveGini(resultFolder,"Facebook",embedVals[embedVals$dataset=="Facebook",][1,2])
+diWave<-rbind(diWave,waveGini(resultFolder,"Enron",embedVals[embedVals$dataset=="Enron",][1,2]))
+undiWave<-rbind(undiWave,waveGini(resultFolder,"Dblp",embedVals[embedVals$dataset=="Dblp",][1,2]))
+diWave<-rbind(diWave,waveGini(resultFolder,"Epinions",embedVals[embedVals$dataset=="Epinions",][1,2]))
+diWave<-rbind(diWave,waveGini(resultFolder,"Wiki",embedVals[embedVals$dataset=="Wiki",][1,2]))
+undiWave<-rbind(undiWave,waveGini(resultFolder,"gowalla",embedVals[embedVals$dataset=="gowalla",][1,2]))
+undiWave<-rbind(undiWave,waveGini(resultFolder,"kite",embedVals[embedVals$dataset=="kite",][1,2]))
+
+ 
+undiWave$wave <-as.factor(undiWave$wave)
+diWave$wave <-as.factor(diWave$wave)
+
+m13<- ggplot(undiWave,aes(x=emVal,y=V1,group=wave,color=wave))+geom_line(size=1)+scale_x_continuous(name="embeddedness")+theme(legend.position = c(0.8, 0.5),text = element_text(size=16))+scale_y_continuous(name="Gini value")
+
+m13<-m13+geom_point(aes(shape=wave), size=2) +scale_shape_manual(values=c(0,1,2,3,4,5,6,7,8)) 
+m13
+
+m23<- ggplot(diWave,aes(x=emVal,y=V1,group=wave,color=wave))+geom_line(size=1)+scale_x_continuous(name="embeddedness")+theme(legend.position = c(0.8, 0.5),text = element_text(size=16))+scale_y_continuous(name="Gini value")
+
+m23<-m23+geom_point(aes(shape=wave), size=2) +scale_shape_manual(values=c(0,1,2,3,4,5,6,7,8)) 
+m23
+
+resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/"
+ggsave(filename=paste(resultFolder,"figs/compositeWavedUn.eps",sep=""),plot=m13,width=6,height=4,unit="in")
+ggsave(filename=paste(resultFolder,"figs/compositeWavedUn.png",sep=""),plot=m13,width=6,height=4,unit="in")
+ggsave(filename=paste(resultFolder,"figs/compositeWavedDi.eps",sep=""),plot=m23,width=6,height=4,unit="in")
+ggsave(filename=paste(resultFolder,"figs/compositeWavedDi.png",sep=""),plot=m23,width=6,height=4,unit="in")
+
+ 
+```
+
+ 
