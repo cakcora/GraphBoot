@@ -23,10 +23,10 @@ Paper source will be shared after the final review. Below, you will find the res
 <p>Undirected Graphs (Facebook New Orleans)</p>
 <p>Signed Graphs (Epinions.com)</p>
 
-<img src="resultsWaveDirected1.png" width="25">
-<img src="resultsWaveDirected2.png">
-<img src="resultsWaveUndirected1.png">
-<img src="resultsWaveUndirected2.png">
+<img src="resultswaveDirected1.png" width="25">
+<img src="resultswaveDirected2.png">
+<img src="resultswaveUndirected1.png">
+<img src="resultswaveUndirected2.png">
 
 
 <p>Twitter case study on Mental Health</p>
