@@ -29,6 +29,8 @@ Paper source will be shared after the final review. Below, you will find the res
 <img src="resultswaveUndirected2.png" width="350">
 
 
+<img src="resultsintervalUndirected.png" width="350">
+<img src="resultsintervalDirected.png" width="350">
 <p>Twitter case study on Mental Health</p>
 <img src="giniUseless.png" width="350">
 <img src="giniUseless2.png" width="350">
