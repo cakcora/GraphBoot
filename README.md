@@ -22,6 +22,8 @@ Paper source will be shared after the final review. Below, you will find the res
 <p>Directed Graphs (Twitter 2010)</p>
 <p>Undirected Graphs (Facebook New Orleans)</p>
 <p>Signed Graphs (Epinions.com)</p>
+<p>Location based Graphs:1 (Gowalla)</p>
+<p>Location based Graphs:2 (Brightkite)</p>
 
 <img src="resultswaveDirected1.png" width="350">
 <img src="resultswaveDirected2.png" width="350">
