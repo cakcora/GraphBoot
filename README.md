@@ -13,7 +13,7 @@ Paper source will be shared after the final review. Below, you will find the res
 <h1>Used Networks</h1>
 <h2>Synthetic Graphs</h2>
 <p>Lognormal graphs</p>
-<img src="resultsLN.png">
+<img src="resultsLN.png" width="150">
  
 <p>Rmat graphs</p>
 <img src="resultsRM.png">
@@ -23,12 +23,12 @@ Paper source will be shared after the final review. Below, you will find the res
 <p>Undirected Graphs (Facebook New Orleans)</p>
 <p>Signed Graphs (Epinions.com)</p>
 
-<img src="resultswaveDirected1.png" width="25">
-<img src="resultswaveDirected2.png">
-<img src="resultswaveUndirected1.png">
-<img src="resultswaveUndirected2.png">
+<img src="resultswaveDirected1.png" width="150">
+<img src="resultswaveDirected2.png" width="150">
+<img src="resultswaveUndirected1.png" width="150">
+<img src="resultswaveUndirected2.png" width="150">
 
 
 <p>Twitter case study on Mental Health</p>
-<img src="giniUseless.png">
-<img src="giniUseless2.png">
+<img src="giniUseless.png" width="150">
+<img src="giniUseless2.png" width="150">
