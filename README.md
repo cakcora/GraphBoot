@@ -13,10 +13,20 @@ Paper source will be shared after the final review. Below, you will find the res
 <h1>Used Networks</h1>
 <h2>Synthetic Graphs</h2>
 <p>Lognormal graphs</p>
-<p>Grid graphs</p>
+<img src="resultsLN.png">
+ 
 <p>Rmat graphs</p>
+<img src="resultsRM.png">
 <h2>Real World Graphs</h2>
 <p>Citation Graphs (DBLP 2016)</p>
 <p>Directed Graphs (Twitter 2010)</p>
 <p>Undirected Graphs (Facebook New Orleans)</p>
 <p>Signed Graphs (Epinions.com)</p>
+
+<img src="resultsvalueDirected.png">
+<img src="resultsvalueUndirected.png">
+<img src="resultsvalueDirected.png">
+
+<p>Twitter case study on Mental Health</p>
+<img src="giniUseless.png">
+<img src="giniUseless2.png">
