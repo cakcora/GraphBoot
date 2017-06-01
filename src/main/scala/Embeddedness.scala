@@ -24,7 +24,7 @@ object Embeddedness {
 
     val dataset: String = "gowalla"
     println("data set is: " + dataset)
-    var graph: Graph[Int, Int] = DataLoader.load(sc, dataset, Map())
+    var graph: Graph[Int, Int] = DataLoader.loadGraph(sc, dataset, Map())
     if (List("facebook", "dblp", "test", "kite", "gowalla").contains(dataset))
       graph = GraphCleaning.cleanGraph(sc, graph)
     else if (List("enron", "wiki", "epinions").contains(dataset))

@@ -31,7 +31,7 @@ object ExperimentDriverRMatNetworks {
       for (edgeDensity <- List(5, 10, 20, 40)) {
 
         val grOptions: Map[String, AnyVal] = Map(("vertices", 100000), ("edgeDensity", edgeDensity))
-        val graph: Graph[Int, Int] = DataLoader.load(sc, networkName, grOptions)
+        val graph: Graph[Int, Int] = DataLoader.loadGraph(sc, networkName, grOptions)
         val degreeMap: Map[Int, Int] = graph.collectNeighborIds(EdgeDirection.Either).collect().map(e => e._1.toInt -> e._2.length).toMap
         val seedCount = 20
         val maxSeed = 30

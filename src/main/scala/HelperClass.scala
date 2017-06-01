@@ -21,7 +21,7 @@ object HelperClass {
     val sc = spark.sparkContext
 
     val dataset: String = "kite"
-    val graph: Graph[Int, Int] = GraphCleaning.cleanGraph(sc, DataLoader.load(sc, dataset, Map()))
+    val graph: Graph[Int, Int] = GraphCleaning.cleanGraph(sc, DataLoader.loadGraph(sc, dataset, Map()))
     if (true) {
       print(dataset, graph)
     }

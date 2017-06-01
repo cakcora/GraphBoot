@@ -17,7 +17,7 @@ object GraphBoot {
     val bootCount = expOptions("bootCount")
     val seeds: RDD[(Long, Int)] = sc.makeRDD(seedArray)
 
-    var lmsiList = if (method == "parScala") {
+    val lmsiList = if (method == "parScala") {
       LMSI.parallelLMSI(graph, seeds, wave)
     }
     else if (method == "seq")

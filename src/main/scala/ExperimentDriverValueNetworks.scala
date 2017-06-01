@@ -8,9 +8,10 @@ import org.apache.spark.sql.SparkSession
 /**
   * Created by cxa123230 on 11/15/2016.
   */
-object ExperimentDriverRealNetworks {
+object ExperimentDriverValueNetworks {
   Logger.getLogger("org.apache.spark").setLevel(Level.ERROR)
   Logger.getLogger("org.apache.spark.storage.BlockManager").setLevel(Level.ERROR)
+
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
       .builder
@@ -19,39 +20,34 @@ object ExperimentDriverRealNetworks {
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
-    val dataSets = List("dblp", "facebook", "enron", "gowalla", "kite", "epinions", "livejournal", "wiki-talk")
-    val exDataSet = List("livejournal")
-    for (dataset <- exDataSet) {
-      println("data set is: " + dataset)
-      val fw: FileWriter = new FileWriter("exp" + dataset + ".txt");
+    val dataset = "epinions-value"
+    val values = List(5044, 3069, 46214) //6854272->3069//526227072->5044, 462395008->46214
+    for (value <- values) {
+      println(s"data set is:$dataset $value")
+      val fw: FileWriter = new FileWriter("exp" + dataset + value + ".txt");
       val header = "method\twave\tseed\tlmsiAll\tlmsiDistinct\tmean\tmedGraphDeg\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
-      fw.write(header);
+      fw.write(header)
       val wave = 2
 
 
-      var graph: Graph[Int, Int] = DataLoader.loadGraph(sc, dataset, Map())
+      val degreeMap: Map[Int, Int] = DataLoader.loadData(sc, value)
+      println(degreeMap.size + " users with the topic found")
+      val graph: Graph[Int, Int] = GraphCleaning.cleanGraph(sc, degreeMap, DataLoader.loadGraph(sc, dataset, Map()))
       println(graph.numEdges + " directed edges among " + graph.numVertices + " vertices")
-      if (List("facebook", "dblp", "gowalla", "kite").contains(dataset))
-        graph = GraphCleaning.cleanGraph(sc, graph)
-      else if (List("enron", "wiki", "epinions").contains(dataset))
-        graph = GraphCleaning.undirectedGraph(graph, 1)
-      else {
-        graph = GraphCleaning.cleanGraph(sc, graph)
-        //throw new IllegalArgumentException(dataset + " network is not available")
-      }
-      val degreeMap: Map[Int, Int] = graph.degrees.map(e => (e._1.toInt, e._2)).collect().toMap
+
+
       println(graph.numEdges + " cleaned edges among " + graph.numVertices + " vertices")
-      val degree = degreeMap.map(e => e._2).sum / (1.0 * graph.numVertices)
-      val valueFile: FileWriter = new FileWriter("value" + dataset + ".txt");
+      val degree = degreeMap.values.sum / (1.0 * degreeMap.keySet.size)
+      val valueFile: FileWriter = new FileWriter("value" + dataset + value + ".txt");
       degreeMap.foreach(e => valueFile.append(e._1 + "\t" + e._2 + "\r\n"))
-      valueFile.close
+      valueFile.close()
       print(degree + " average degrees")
       for (iteration <- 1 to 50) {
         println(" iter " + iteration)
         val maxSeed = 100
-        val allSeeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
+        val allSeeds: RDD[(VertexId, Int)] = Common.chooseKnownSeeds(sc, degreeMap, maxSeed)
 
-        for (seedCount <- List(1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) {
+        for (seedCount <- List(1, 5, 10, 20, 50, 100)) {
           val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave))
           val seedSet: Array[(VertexId, Int)] = allSeeds.take(seedCount)
 

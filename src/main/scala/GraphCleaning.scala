@@ -6,6 +6,12 @@ import org.apache.spark.rdd.RDD
   * Created by cxa123230 on 11/15/2016.
   */
 object GraphCleaning {
+  def cleanGraph(sc: SparkContext, degreeMap: Map[Int, Int], graph: Graph[Int, Int]): Graph[Int, Int] = {
+    val g = graph.removeSelfEdges().edges.map(e => if (e.srcId > e.dstId) (e.dstId, e.srcId) else (e.srcId, e.dstId)).distinct()
+    val g2 = g.filter(f => degreeMap.contains(f._1.toInt) && degreeMap.contains(f._2.toInt))
+    return Graph.fromEdgeTuples(g2, defaultValue = 1)
+  }
+
 
   /*
   1- Remove multiple edges between vertices
