@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "intervals"
 output: html_notebook
 ---
 
@@ -22,20 +22,24 @@ vis<-function(inputFolder,dataset,phase=""){
 } 
 inputFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/seeded/"
 data<- vis(inputFolder,"Facebook")
-data<-rbind(data,vis(inputFolder,"Enron"))
-data<-rbind(data,vis(inputFolder,"Dblp"))
+#data<-rbind(data,vis(inputFolder,"Dblp"))
+data<-rbind(data,vis(inputFolder,"Gowalla"))
+#data<-rbind(data,vis(inputFolder,"Kite"))
+#data<-rbind(data,vis(inputFolder,"Enron"))
 data<-rbind(data,vis(inputFolder,"Epinions")) 
 data<-rbind(data,vis(inputFolder,"Wiki"))
-data<-rbind(data,vis(inputFolder,"Gowalla"))
-data<-rbind(data,vis(inputFolder,"Kite"))
+data<-rbind(data,vis(inputFolder,"LiveJournal"))
+data<- subset(data, seed == 1 | seed == 5| seed == 10| seed == 20| seed == 50| seed == 100)
+m12<- ggplot(data[data$seed>10,],aes(x=seed,y=V1, color=dataset,group=dataset))+geom_line(size=1)+scale_x_continuous(name="seed")+theme_bw()+theme(legend.position = c(0.7, 0.7),text = element_text(size=16))+scale_y_continuous(name="Relative interval length")
+m12<-m12+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6,7)) 
+m12 
+
+ 
+figFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
+ggsave(filename=paste(figFolder,"intervals.png",sep=""),plot=m12,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"intervals.eps",sep=""),plot=m12,width=5,height=3,unit="in")
  
 
-m12<- ggplot(data[data$seed>10,],aes(x=seed,y=V1, color=dataset,group=dataset))+geom_line(size=2)+scale_x_continuous(name="seed")+theme(legend.position = c(0.8, 0.6),text = element_text(size=16))+scale_y_continuous(name="Relative interval length")
-m12<-m12+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
-m12 
-figFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
-ggsave(filename=paste(figFolder,"intervals.png",sep=""),plot=m12,width=6,height=4,unit="in")
-ggsave(filename=paste(figFolder,"intervals.eps",sep=""),plot=m12,width=6,height=4,unit="in")
 inputFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/depression/"
 
 
@@ -52,7 +56,7 @@ wavefunc<-function(inputFolder,aspect){
 depdata<-wavefunc(inputFolder,"Disclosure")
 depdata<-rbind(depdata,wavefunc(inputFolder,"Treatment"))
 depdata<-rbind(depdata,wavefunc(inputFolder,"Symptom"))
-m13<- ggplot(depdata,aes(x=wave,y=V1, color=aspect,group=aspect))+geom_line(size=2)+scale_x_continuous(name="wave",breaks=c(0,1,2))+theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_y_continuous(name="Relative interval length")
+m13<- ggplot(depdata,aes(x=wave,y=V1, color=aspect,group=aspect))+geom_line(size=2)+scale_x_continuous(name="wave",breaks=c(0,1,2))+theme_bw()+theme(legend.position = c(0.7, 0.7),text = element_text(size=16))+scale_y_continuous(name="Relative interval length")
 m13<-m13+geom_point(aes(shape=aspect), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
 m13 
 ggsave(filename=paste(figFolder,"aspectIntervals.png",sep=""),plot=m13,width=6,height=4,unit="in")

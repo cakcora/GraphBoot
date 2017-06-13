@@ -1,0 +1,83 @@
+---
+title: "results"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## GraphBoot R Scripts
+
+Working on the results of the GraphBoot Spark code:
+
+```{r}
+library(ggplot2)
+library(plyr)
+library(igraph)
+
+rm(list=ls(all=TRUE))
+
+
+vis<-function(resultFolder,fileVal,value){
+  fName<- paste(resultFolder,fileVal,".txt",sep="")
+  
+  ex <- read.table(file=fName, header=TRUE,sep="\t")
+  effect<-ddply(ex,.(seed),summarise,V1=mean(mean/avgGraphDeg),V2=mean((l2-l1)/mean),V3=mean(lmsiDistinct))
+  
+  effect<-cbind(effect,dataset=value)
+  
+  return(effect)
+}
+ 
+resultFolder<-"C:/Users/cxa123230/IdeaProjects/GraphBoot/results/seeded/"
+d1<-vis(resultFolder,"expepinions-value3069" ,"H1")
+d2<-vis(resultFolder,"expepinions-value5044" ,"H2")
+d3<-vis(resultFolder,"expepinions-value46214" ,"H3")
+d4<-vis(resultFolder,"expepinions-value5" ,"L1")
+d5<-vis(resultFolder,"expepinions-value10" ,"L2")
+d6<-vis(resultFolder,"expepinions-value86" ,"L3")
+ 
+
+directed<-data.frame(d1)
+directed<-rbind(directed,d2)
+directed<-rbind(directed,d3)
+directed<-rbind(directed,d4)
+directed<-rbind(directed,d5)
+directed<-rbind(directed,d6)
+ 
+directed<- subset(directed, seed == 1 | seed == 5| seed == 10| seed == 20| seed == 50| seed == 100)
+
+ 
+lt<-c(1, 2,3,4,5,6)
+
+ 
+#--------------------------------------------------
+pd<-ggplot(directed, aes(x=seed,y =V1, color=dataset, group=dataset))   
+pd<-pd+ geom_line(size=1)+scale_y_continuous(limit=c(0.6,1.05),name=expression(paste(bar(x)," / ",mu)))
+pd<-pd+theme_bw()+ theme(legend.position = c(0.8, 0.6),text = element_text(size=16)) 
+pd<-pd+ geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=lt) 
+pd
+
+vd<-ggplot(directed, aes(x=seed,y =V3, color=dataset, group=dataset)) 
+vd<-vd+ geom_line(size=1)+scale_y_continuous(name=expression(paste("BCI"," / ",bar(x))))  
+vd<-vd+theme_bw()+ theme(legend.position = c(0.8, 0.6),text = element_text(size=16))+scale_linetype_manual(values=lt)
+vd<-vd+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=lt) 
+vd
+ 
+figFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
+ggsave(filename=paste(figFolder,"resultsValued.eps",sep=""),plot=pd,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"resultsValued.png",sep=""),plot=pd,width=5,height=3,unit="in")
+ ggsave(filename=paste(figFolder,"resultsValuedInterval.eps",sep=""),plot=vd,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"resultsValuedInterval.png",sep=""),plot=vd,width=5,height=3,unit="in")
+
+
+```
+
+
+
+
+
+
+
+

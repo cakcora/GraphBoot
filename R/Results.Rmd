@@ -34,6 +34,7 @@ resultFolder<-"C:/Users/cxa123230/IdeaProjects/GraphBoot/results/seeded/"
 d1<-vis(resultFolder,"expenron" ,"Enron")
 d2<-vis(resultFolder,"expepinions" ,"Epinions")
 d3<-vis(resultFolder,"expwiki" ,"Wiki")
+d4<-vis(resultFolder,"explivejournal" ,"LiveJournal")
 
 u1<-vis(resultFolder,"expKite" ,"Kite")
 u2<-vis(resultFolder,"expGowalla" ,"Gowalla")
@@ -43,50 +44,52 @@ u4<-vis(resultFolder,"expfacebook" ,"Facebook")
 directed<-data.frame(d1)
 directed<-rbind(directed,d2)
 directed<-rbind(directed,d3)
+directed<-rbind(directed,d4)
+directed<- subset(directed, seed == 1 | seed == 5| seed == 10| seed == 20| seed == 50| seed == 100)
 
 undirected<-data.frame(u1)
 undirected<-rbind(undirected,u2)
 undirected<-rbind(undirected,u3)
 undirected<-rbind(undirected,u4)
- 
+ undirected<- subset(undirected, seed == 1 | seed == 5| seed == 10| seed == 20| seed == 50| seed == 100)
 lt<-c(1, 2,3, 4,5,6,7,8)
 
 pu<-ggplot(undirected, aes(x=seed,y =V1, color=dataset, group=dataset))   
-pu<-pu+ geom_line(size=2)+scale_y_continuous(limits=c(0,1.6),name=expression(paste(bar(x)," / ",mu)))
-pu<-pu+ theme(legend.position = c(0.8, 0.2),text = element_text(size=16)) 
+pu<-pu+ geom_line(size=1)+scale_y_continuous(limits=c(0,1.6),name=expression(paste(bar(x)," / ",mu)))
+pu<-pu+ theme_bw()+theme(legend.position = c(0.8, 0.2),text = element_text(size=16)) 
 pu<-pu+ geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
 pu
 
 vu<-ggplot(undirected, aes(x=seed,y =V2, color=dataset, group=dataset)) 
-vu<-vu+ geom_line(size=2)+scale_y_continuous(name=expression(paste("BCI"," / ",bar(x))))   
-vu<-vu+ theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_linetype_manual(values=lt)
+vu<-vu+ geom_line(size=1)+scale_y_continuous(name=expression(paste("BCI"," / ",bar(x))))   
+vu<-vu+ theme_bw()+theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_linetype_manual(values=lt)
 vu<-vu+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
 vu
  
 figFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
-ggsave(filename=paste(figFolder,"resultsvalueUndirected.eps",sep=""),plot=pu,width=6,height=4,unit="in")
-ggsave(filename=paste(figFolder,"resultsvalueUndirected.png",sep=""),plot=pu,width=6,height=4,unit="in")
-ggsave(filename=paste(figFolder,"resultsintervalUndirected.eps",sep=""),plot=vu,width=6,height=4,unit="in")
-ggsave(filename=paste(figFolder,"resultsintervalUndirected.png",sep=""),plot=vu,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"resultsvalueUndirected.eps",sep=""),plot=pu,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"resultsvalueUndirected.png",sep=""),plot=pu,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"resultsintervalUndirected.eps",sep=""),plot=vu,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"resultsintervalUndirected.png",sep=""),plot=vu,width=5,height=3,unit="in")
 
 #--------------------------------------------------
 pd<-ggplot(directed, aes(x=seed,y =V1, color=dataset, group=dataset))   
-pd<-pd+ geom_line(size=2)+scale_y_continuous(limits=c(0,1),name=expression(paste(bar(x)," / ",mu)))
-pd<-pd+ theme(legend.position = c(0.8, 0.2),text = element_text(size=16)) 
+pd<-pd+ geom_line(size=1)+scale_y_continuous(limit=c(0,1),name=expression(paste(bar(x)," / ",mu)))
+pd<-pd+ theme_bw()+theme(legend.position = c(0.8, 0.3),text = element_text(size=16)) 
 pd<-pd+ geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
 pd
 
 vd<-ggplot(directed, aes(x=seed,y =V2, color=dataset, group=dataset)) 
-vd<-vd+ geom_line(size=2)+scale_y_continuous(name=expression(paste("BCI"," / ",bar(x))))  
-vd<-vd+ theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_linetype_manual(values=lt)
+vd<-vd+ geom_line(size=1)+scale_y_continuous(name=expression(paste("BCI"," / ",bar(x))))  
+vd<-vd+ theme_bw()+theme(legend.position = c(0.8, 0.8),text = element_text(size=14))+scale_linetype_manual(values=lt)
 vd<-vd+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
 vd
  
 figFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
-ggsave(filename=paste(figFolder,"resultsvalueDirected.eps",sep=""),plot=pd,width=6,height=4,unit="in")
-ggsave(filename=paste(figFolder,"resultsvalueDirected.png",sep=""),plot=pd,width=6,height=4,unit="in")
-ggsave(filename=paste(figFolder,"resultsintervalDirected.eps",sep=""),plot=vd,width=6,height=4,unit="in")
-ggsave(filename=paste(figFolder,"resultsintervalDirected.png",sep=""),plot=vd,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"resultsginiseeddirected.eps",sep=""),plot=pd,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"resultsginiseeddirected.png",sep=""),plot=pd,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"resultsintervalDirected.eps",sep=""),plot=vd,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"resultsintervalDirected.png",sep=""),plot=vd,width=5,height=3,unit="in")
 
 
 ```

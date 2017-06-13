@@ -52,33 +52,33 @@ undirected<-rbind(undirected,u4)
 lt<-c(1, 2,3, 4,5,6,7,8)
 
 pu<-ggplot(undirected, aes(x=wave,y =V1, color=dataset, group=dataset))   
-pu<-pu+ geom_line(size=2)+scale_y_continuous(limits=c(0,1.6),name=expression(paste(bar(x)," / ",mu)))
-pu<-pu+ theme(legend.position = c(0.8, 0.2),text = element_text(size=16)) 
+pu<-pu+ geom_line(size=1)+scale_y_continuous(limits=c(0,1.4),name=expression(paste(bar(x)," / ",mu)))
+pu<-pu+ theme_bw()+theme(legend.position = c(0.8, 0.3),text = element_text(size=16)) 
 pu<-pu+ geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
 pu
 
 vu<-ggplot(undirected, aes(x=wave,y =V2, color=dataset, group=dataset)) 
-vu<-vu+ geom_line(size=2)+scale_y_continuous(name=expression(paste("BCI"," / ",bar(x))))   
+vu<-vu+ geom_line(size=1)+scale_y_continuous(name=expression(paste("BCI"," / ",bar(x))))   
 vu<-vu+ theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_linetype_manual(values=lt)
 vu<-vu+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
 vu
  
 figFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
-ggsave(filename=paste(figFolder,"resultswaveUndirected1.eps",sep=""),plot=pu,width=6,height=4,unit="in")
-ggsave(filename=paste(figFolder,"resultswaveUndirected1.png",sep=""),plot=pu,width=6,height=4,unit="in")
+ggsave(filename=paste(figFolder,"resultswaveUndirected1.eps",sep=""),plot=pu,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"resultswaveUndirected1.png",sep=""),plot=pu,width=5,height=3,unit="in")
 ggsave(filename=paste(figFolder,"resultswaveUndirected2.eps",sep=""),plot=vu,width=6,height=4,unit="in")
 ggsave(filename=paste(figFolder,"resultswaveUndirected2.png",sep=""),plot=vu,width=6,height=4,unit="in")
 
 #--------------------------------------------------
 pd<-ggplot(directed, aes(x=wave,y =V1, color=dataset, group=dataset))   
-pd<-pd+ geom_line(size=2)+scale_y_continuous(name=expression(paste(bar(x)," / ",mu)))
+pd<-pd+ geom_line(size=1)+scale_y_continuous(name=expression(paste(bar(x)," / ",mu)))
 #pd<-pd+scale_x_continuous(limits=c(0,4))
 pd<-pd+ theme(legend.position = c(0.8, 0.8),text = element_text(size=16)) 
 pd<-pd+ geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
 pd
 
 vd<-ggplot(directed, aes(x=wave,y =V2, color=dataset, group=dataset)) 
-vd<-vd+ geom_line(size=2)+scale_y_continuous(name=expression(paste("BCI"," / ",bar(x))))  
+vd<-vd+ geom_line(size=1)+scale_y_continuous(name=expression(paste("BCI"," / ",bar(x))))  
 vd<-vd+ theme(legend.position = c(0.8, 0.8),text = element_text(size=16))+scale_linetype_manual(values=lt)
 vd<-vd+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
 vd

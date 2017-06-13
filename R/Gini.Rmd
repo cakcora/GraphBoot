@@ -12,13 +12,13 @@ require(ineq)
 
 rm(list=ls(all=TRUE))
 
-seedGini<-function(inputFolder,dataset){ 
+seedGini<-function(inputFolder,dataset,name){ 
   
   dataFrame <-(read.csv(paste(inputFolder,"exp",dataset,".txt",sep=""),sep="\t",header=T))
   effect <- ddply(dataFrame,.(seed),summarise,V1=ineq((l2-l1),type="Gini"),V2=ineq((lmax-lmin),type="Gini"))
-  effect<-cbind(effect,dataset)  
+  effect<-cbind(effect,dataset=name)  
   return(effect)
-   
+  
 }
 waveGini<-function(inputFolder,dataset){ 
   
@@ -26,44 +26,69 @@ waveGini<-function(inputFolder,dataset){
   effect <- ddply(dataFrame,.(wave),summarise,V1=ineq((l2-l1),type="Gini"),V2=ineq((lmax-lmin),type="Gini"))
   effect<-cbind(effect,dataset)  
   return(effect)
-   
+  
 }
- 
-resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/seeded/"
-data<-data.frame()
-data<- seedGini(resultFolder,"Facebook")
-data<-rbind(data,seedGini(resultFolder,"Enron"))
- data<-rbind(data,seedGini(resultFolder,"Dblp"))
- data<-rbind(data,seedGini(resultFolder,"Epinions"))
- data<-rbind(data,seedGini(resultFolder,"Wiki"))
- data<-rbind(data,seedGini(resultFolder,"Gowalla"))
- data<-rbind(data,seedGini(resultFolder,"Kite"))
 
-m12<- ggplot(data,aes(x=seed,y=V1,color=dataset))+geom_line(size=2)+scale_x_continuous(name="seed")+theme(legend.position = c(0.8, 0.6),text = element_text(size=16))+scale_y_continuous(name="Gini value")
-m12<-m12+geom_point(aes(shape=dataset), size=2) +scale_shape_manual(values=c(0,1,2,3,4,5,6,7)) 
+dataFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/seeded/"
+data<-data.frame()
+data<- seedGini(dataFolder,"Facebook","Facebook")
+data<-rbind(data,seedGini(dataFolder,"Dblp","Dblp"))
+data<-rbind(data,seedGini(dataFolder,"Gowalla","Gowalla"))
+data<-rbind(data,seedGini(dataFolder,"Kite","Kite"))
+data<- subset(data, seed == 1 | seed == 5| seed == 10| seed == 20| seed == 50| seed == 100)
+
+ddata<-data.frame()
+ddata<-rbind(ddata,seedGini(dataFolder,"Enron","Enron"))
+ddata<-rbind(ddata,seedGini(dataFolder,"Epinions","Epinions"))
+ddata<-rbind(ddata,seedGini(dataFolder,"Wiki","Wiki"))
+ddata<-rbind(ddata,seedGini(dataFolder,"LiveJournal","LiveJournal"))
+ddata<- subset(ddata, seed == 1 | seed == 5| seed == 10| seed == 20| seed == 50| seed == 100)
+m12<- ggplot(data,aes(x=seed,y=V1,color=dataset))+geom_line(size=1)+scale_x_continuous(name="seed")+theme_bw()+theme(legend.position = c(0.8, 0.6),text = element_text(size=16))+scale_y_continuous(name="Gini value")
+m12<-m12+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6,7)) 
 m12
 
+m122<- ggplot(ddata,aes(x=seed,y=V1,color=dataset))+geom_line(size=1)+scale_x_continuous(name="seed")+theme_bw()+theme(legend.position = c(0.8, 0.6),text = element_text(size=16))+scale_y_continuous(name="Gini value")
+m122<-m122+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6,7)) 
+m122
 figFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/figs/"
-ggsave(filename=paste(figFolder,"giniSeed.eps",sep=""),plot=m12,width=6,height=4,unit="in")
-ggsave(filename=paste(figFolder,"giniSeed.png",sep=""),plot=m12,width=6,height=4,unit="in")
- 
+ggsave(filename=paste(figFolder,"giniUSeed.eps",sep=""),plot=m12,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"giniUSeed.png",sep=""),plot=m12,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"giniDSeed.eps",sep=""),plot=m122,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"giniDSeed.png",sep=""),plot=m122,width=5,height=3,unit="in")
+
+valuedata<-data.frame()
+valuedata<- seedGini(dataFolder,"epinions-value3069","H1")
+valuedata<-rbind(valuedata,seedGini(dataFolder,"epinions-value5044","H2"))
+valuedata<-rbind(valuedata,seedGini(dataFolder,"epinions-value46214","H3"))
+valuedata<-rbind(valuedata,seedGini(dataFolder,"epinions-value5","L1"))
+valuedata<-rbind(valuedata,seedGini(dataFolder,"epinions-value10","L2"))
+valuedata<-rbind(valuedata,seedGini(dataFolder,"epinions-value86","L3"))
+valuedata<- subset(valuedata, seed == 1 | seed == 5| seed == 10| seed == 20| seed == 50| seed == 100)
+m132<- ggplot(valuedata,aes(x=seed,y=V1,color=dataset))+geom_line(size=1)+scale_x_continuous(name="seed")+theme_bw()+theme(legend.key.size = unit(0.7, "cm"),legend.position = c(0.8, 0.6),text = element_text(size=16))+scale_y_continuous(name="Gini value")#limit=c(0,0.02),
+m132<-m132+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6,7))  
+m132
+ggsave(filename=paste(figFolder,"ginivalueseed.eps",sep=""),plot=m132,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"ginivalueseed.png",sep=""),plot=m132,width=5,height=3,unit="in")
+
 resultFolder <- "C:/Users/cxa123230/IdeaProjects/GraphBoot/results/waved/"
+
 wdata<-data.frame()
 wdata<- waveGini(resultFolder,"Facebook")
-wdata<-rbind(wdata,waveGini(resultFolder,"Enron"))
- wdata<-rbind(wdata,waveGini(resultFolder,"Dblp"))
- wdata<-rbind(wdata,waveGini(resultFolder,"Epinions"))
- wdata<-rbind(wdata,waveGini(resultFolder,"Wiki"))
- wdata<-rbind(wdata,waveGini(resultFolder,"Gowalla"))
-  wdata<-rbind(wdata,waveGini(resultFolder,"Kite"))
-  
+#wdata<-rbind(wdata,waveGini(resultFolder,"Enron"))
+#wdata<-rbind(wdata,waveGini(resultFolder,"Dblp"))
+wdata<-rbind(wdata,waveGini(resultFolder,"Epinions"))
+wdata<-rbind(wdata,waveGini(resultFolder,"Wiki"))
+wdata<-rbind(wdata,waveGini(resultFolder,"Gowalla"))
+wdata<-rbind(wdata,waveGini(resultFolder,"Kite"))
  
-m13<- ggplot(wdata,aes(x=wave,y=V1,color=dataset))+geom_line(size=2)+scale_x_continuous(name="wave")+theme(legend.position = c(0.8, 0.6),text = element_text(size=16))+scale_y_continuous(name="Gini value")
-m13<-m13+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6)) 
+
+m13<- ggplot(wdata,aes(x=wave,y=V1,color=dataset))+geom_line(size=1)+scale_x_continuous(name="wave")+theme_bw()+theme(legend.position = c(0.8, 0.6),text = element_text(size=16))+scale_y_continuous(name="Gini value")
+m13<-m13+geom_point(aes(shape=dataset), size=4) +scale_shape_manual(values=c(0,1,2,3,4,5,6,7)) 
 m13
-ggsave(filename=paste(figFolder,"giniWave.eps",sep=""),plot=m13,width=6,height=4,unit="in")
-ggsave(filename=paste(figFolder,"giniWave.png",sep=""),plot=m13,width=6,height=4,unit="in")
- 
+ggsave(filename=paste(figFolder,"giniWave.eps",sep=""),plot=m13,width=5,height=3,unit="in")
+ggsave(filename=paste(figFolder,"giniWave.png",sep=""),plot=m13,width=5,height=3,unit="in")
+
+
 ```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
