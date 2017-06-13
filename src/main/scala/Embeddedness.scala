@@ -22,12 +22,12 @@ object Embeddedness {
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
 
-    val dataset: String = "gowalla"
+    val dataset: String = "livejournal"
     println("data set is: " + dataset)
     var graph: Graph[Int, Int] = DataLoader.loadGraph(sc, dataset, Map())
     if (List("facebook", "dblp", "test", "kite", "gowalla").contains(dataset))
       graph = GraphCleaning.cleanGraph(sc, graph)
-    else if (List("enron", "wiki", "epinions").contains(dataset))
+    else if (List("enron", "wiki", "epinions", "livejournal").contains(dataset))
       graph = GraphCleaning.undirectedGraph(graph, 1)
     else {
       println(dataset + " network is not an existing dataset. ")

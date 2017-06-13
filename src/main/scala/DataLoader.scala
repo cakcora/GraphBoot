@@ -134,7 +134,7 @@ object DataLoader {
         GraphLoader.edgeListFile(sc, dir + "cit-Patents.txt")
       }
       case "livejournal" => {
-        GraphLoader.edgeListFile(sc, dir + "com-lj.ungraph.txt")
+        GraphLoader.edgeListFile(sc, dir + "soc-LiveJournal1.txt")
       }
       case "as-skitter" => {
         GraphLoader.edgeListFile(sc, dir + "as-skitter.txt")

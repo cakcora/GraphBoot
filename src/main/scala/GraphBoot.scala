@@ -87,10 +87,10 @@ object GraphBoot {
       }
 
       var avgDegree = 0.0
-      var p0 = 0;
+      var p0 = 0
       if (kSeedMap(0) != 0) p0 = kSeedMap(0) / seedLength
 
-      for (i <- (kSeedMap.keySet ++ kNonSeedMap.keySet)) {
+      for (i <- kSeedMap.keySet ++ kNonSeedMap.keySet) {
         val i1: Double = kSeedMap(i) + Math.abs(1 - p0) * kNonSeedMap(i)
         avgDegree += i * i1 / (seedLength + nSeedLength)
       }

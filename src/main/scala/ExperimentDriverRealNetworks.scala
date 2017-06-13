@@ -15,7 +15,7 @@ object ExperimentDriverRealNetworks {
     val spark = SparkSession
       .builder
       .appName("graphboot")
-      .master("local[16]")
+      .master("local[6]")
       .getOrCreate()
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
@@ -33,14 +33,15 @@ object ExperimentDriverRealNetworks {
       println(graph.numEdges + " directed edges among " + graph.numVertices + " vertices")
       if (List("facebook", "dblp", "gowalla", "kite").contains(dataset))
         graph = GraphCleaning.cleanGraph(sc, graph)
-      else if (List("enron", "wiki", "epinions").contains(dataset))
+      else if (List("enron", "wiki", "epinions", "livejournal").contains(dataset))
         graph = GraphCleaning.undirectedGraph(graph, 1)
       else {
-        graph = GraphCleaning.cleanGraph(sc, graph)
-        //throw new IllegalArgumentException(dataset + " network is not available")
+        //graph = GraphCleaning.cleanGraph(sc, graph)
+        throw new IllegalArgumentException(dataset + " network is not available")
       }
-      val degreeMap: Map[Int, Int] = graph.degrees.map(e => (e._1.toInt, e._2)).collect().toMap
       println(graph.numEdges + " cleaned edges among " + graph.numVertices + " vertices")
+      val degreeMap: Map[Int, Int] = graph.degrees.map(e => (e._1.toInt, e._2)).collect().toMap
+      println(degreeMap.size + " nodes among " + degreeMap.values.sum + " degrees")
       val degree = degreeMap.map(e => e._2).sum / (1.0 * graph.numVertices)
       val valueFile: FileWriter = new FileWriter("value" + dataset + ".txt");
       degreeMap.foreach(e => valueFile.append(e._1 + "\t" + e._2 + "\r\n"))
@@ -50,8 +51,9 @@ object ExperimentDriverRealNetworks {
         println(" iter " + iteration)
         val maxSeed = 100
         val allSeeds: RDD[(VertexId, Int)] = Common.chooseSeeds(sc, graph, maxSeed)
-
-        for (seedCount <- List(1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) {
+        val seedCount = 20
+        //for (seedCount <- List(1, 5, 10, 20, 50, maxSeed))
+        for (wave <- List(0, 1, 2, 3, 4, 5, 6, 7, 8)) {
           val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave))
           val seedSet: Array[(VertexId, Int)] = allSeeds.take(seedCount)
 

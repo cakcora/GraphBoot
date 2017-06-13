@@ -44,7 +44,7 @@ object Common {
     sc.makeRDD(sampled)
   }
 
-  def chooseKnownSeeds(sc: SparkContext, seeds: Map[Int, Int], seedCount: Int): RDD[(graphx.VertexId, Int)] = {
+  def chooseKnownSeedsExp(sc: SparkContext, seeds: Map[Int, Int], seedCount: Int): RDD[(graphx.VertexId, Int)] = {
     val sampled: Array[(graphx.VertexId, Int)] = seeds.keySet.take(seedCount).map(e => (e.toLong, 0)).toArray
     sc.makeRDD(sampled)
   }

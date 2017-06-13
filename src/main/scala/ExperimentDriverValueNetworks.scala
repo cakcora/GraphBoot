@@ -21,8 +21,9 @@ object ExperimentDriverValueNetworks {
     Logger.getRootLogger().setLevel(Level.ERROR)
     val sc = spark.sparkContext
     val dataset = "epinions-value"
-    val values = List(5044, 3069, 46214) //6854272->3069//526227072->5044, 462395008->46214
-    for (value <- values) {
+    val hValues = List(5044, 3069, 46214) //6854272->3069//526227072->5044, 462395008->46214
+    val lValues = List(10, 5, 86)
+    for (value <- hValues) {
       println(s"data set is:$dataset $value")
       val fw: FileWriter = new FileWriter("exp" + dataset + value + ".txt");
       val header = "method\twave\tseed\tlmsiAll\tlmsiDistinct\tmean\tmedGraphDeg\tavgGraphDeg\tvarianceOfBootStrapDegrees\tl1\tmuProxy\tl2\tlmin\tlmax\n"
@@ -45,7 +46,7 @@ object ExperimentDriverValueNetworks {
       for (iteration <- 1 to 50) {
         println(" iter " + iteration)
         val maxSeed = 100
-        val allSeeds: RDD[(VertexId, Int)] = Common.chooseKnownSeeds(sc, degreeMap, maxSeed)
+        val allSeeds: RDD[(VertexId, Int)] = Common.chooseKnownSeedsExp(sc, degreeMap, maxSeed)
 
         for (seedCount <- List(1, 5, 10, 20, 50, 100)) {
           val expOptions: Map[String, Int] = Map(("bootCount", 1000), ("wave", wave))
